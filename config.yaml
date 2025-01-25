@@ -1,13 +1,13 @@
 App:
-  port: 4000
+  port: 
 
 database_erp:
-  dbhost: localhost
-  dbport: 3306
-  username: root
-  password: hakase051199
-  dbname: attendance
+  dbhost: 
+  dbport: 
+  username: 
+  password: 
+  dbname: 
 
 jwt:
-  access_token: thisisasupersecretkey123
-  refresh_token: thisisarefreshsecretkey12
+  access_token: 
+  refresh_token: 
