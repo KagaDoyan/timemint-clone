@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"go-fiber/domain/entities"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -12,6 +13,7 @@ type DayOfWorkRepository interface {
 	Create(dayOfWork entities.DayOfWork) (*entities.DayOfWork, error)
 	Update(id uint, dayOfWork entities.DayOfWork) (*entities.DayOfWork, error)
 	Delete(id uint) error
+	FindByDay(day time.Time) (*entities.DayOfWork, error)
 }
 
 type dayOfWorkRepository struct {
@@ -21,6 +23,15 @@ type dayOfWorkRepository struct {
 func NewDayOfWorkRepository(db *gorm.DB) DayOfWorkRepository {
 	db.AutoMigrate(&entities.DayOfWork{})
 	return &dayOfWorkRepository{db: db}
+}
+
+func (s dayOfWorkRepository) FindByDay(day time.Time) (*entities.DayOfWork, error) {
+	var dayOfWork entities.DayOfWork
+	err := s.db.Where("day = ?", day.Weekday().String()).First(&dayOfWork).Error
+	if err != nil {
+		return nil, err
+	}
+	return &dayOfWork, nil
 }
 
 func (s dayOfWorkRepository) FindAll(page, limit int) ([]entities.DayOfWork, int64, error) {

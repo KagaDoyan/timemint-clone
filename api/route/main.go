@@ -34,4 +34,7 @@ func Setup(app *fiber.App, fb *firebase.App, db *gorm.DB) {
 	NewEmployeeRouter(router, db)
 	NewRoleRouter(router, db)
 	NewDayOfWorkRouter(router, db)
+	NewAttendancePolicyRouter(router, db)
+	NewActiveLocationRouter(router, db)
+	NewHolidayRouter(router, db)
 }

@@ -2,6 +2,7 @@ package route
 
 import (
 	"go-fiber/api/controller"
+	"go-fiber/api/middleware"
 	"go-fiber/data/repositories"
 	"go-fiber/data/services"
 
@@ -13,7 +14,7 @@ func NewDayOfWorkRouter(router fiber.Router, db *gorm.DB) {
 	dayOfWorkRepo := repositories.NewDayOfWorkRepository(db)
 	dayOfWorkService := services.NewDayOfWorkService(dayOfWorkRepo)
 	dayOfWorkController := controller.NewDayOfWorkController(dayOfWorkService)
-	dayOfWorkRoute := router.Group("/day-of-works")
+	dayOfWorkRoute := router.Group("/day-of-works", middleware.AccessToken, middleware.WithRoles(middleware.RoleAdmin))
 	{
 		dayOfWorkRoute.Post("/", dayOfWorkController.Create)
 		dayOfWorkRoute.Put("/:id", dayOfWorkController.Update)
