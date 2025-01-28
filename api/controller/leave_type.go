@@ -8,11 +8,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type dayOfWorkController struct {
-	service services.DayOfWorkService
+type leaveTypeController struct {
+	service services.LeaveTypeService
 }
 
-type DayOfWorkController interface {
+type LeaveTypeController interface {
 	FindAll(ctx *fiber.Ctx) error
 	FindByID(ctx *fiber.Ctx) error
 	Create(ctx *fiber.Ctx) error
@@ -20,13 +20,13 @@ type DayOfWorkController interface {
 	Delete(ctx *fiber.Ctx) error
 }
 
-func NewDayOfWorkController(service services.DayOfWorkService) DayOfWorkController {
-	return &dayOfWorkController{
+func NewLeaveTypeController(service services.LeaveTypeService) LeaveTypeController {
+	return &leaveTypeController{
 		service: service,
 	}
 }
 
-func (c dayOfWorkController) FindAll(ctx *fiber.Ctx) error {
+func (c leaveTypeController) FindAll(ctx *fiber.Ctx) error {
 	limit := ctx.QueryInt("limit", 10)
 	page := ctx.QueryInt("page", 1)
 
@@ -46,52 +46,51 @@ func (c dayOfWorkController) FindAll(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c dayOfWorkController) FindByID(ctx *fiber.Ctx) error {
+func (c leaveTypeController) FindByID(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 
-	result, err := c.service.FindByID(uint(id))
+	result, err := c.service.FindById(uint(id))
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, result)
 }
 
-func (c dayOfWorkController) Create(ctx *fiber.Ctx) error {
-	var dayOfWork models.DayOfWork
-	if err := ctx.BodyParser(&dayOfWork); err != nil {
+func (c leaveTypeController) Create(ctx *fiber.Ctx) error {
+	var leaveType models.LeaveType
+	if err := ctx.BodyParser(&leaveType); err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
-	data, err := c.service.Create(dayOfWork)
+
+	result, err := c.service.Create(leaveType)
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
-	return middleware.NewSuccessResponse(ctx, data)
+	return middleware.NewSuccessResponse(ctx, result)
 }
 
-func (c dayOfWorkController) Update(ctx *fiber.Ctx) error {
+func (c leaveTypeController) Update(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 
-	var dayOfWork models.DayOfWork
-	if err := ctx.BodyParser(&dayOfWork); err != nil {
+	var leaveType models.LeaveType
+	if err := ctx.BodyParser(&leaveType); err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 
-	// Ensure the ID from the path matches the body
-	dayOfWork.ID = uint(id)
-	data, err := c.service.Update(uint(id), dayOfWork)
+	result, err := c.service.Update(uint(id), leaveType)
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
-	return middleware.NewSuccessResponse(ctx, data)
+	return middleware.NewSuccessResponse(ctx, result)
 }
 
-func (c dayOfWorkController) Delete(ctx *fiber.Ctx) error {
+func (c leaveTypeController) Delete(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)

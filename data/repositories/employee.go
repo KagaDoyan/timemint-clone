@@ -33,7 +33,7 @@ func (s employeeRepository) FindAll(page, limit int) ([]entities.Employee, int64
 	}
 
 	// Find paginated records
-	err := s.db.Offset(offset).Limit(limit).Preload("Role").Find(&employees).Error
+	err := s.db.Offset(offset).Limit(limit).Preload(clause.Associations).Find(&employees).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -43,7 +43,7 @@ func (s employeeRepository) FindAll(page, limit int) ([]entities.Employee, int64
 
 func (s employeeRepository) FindByID(id uint) (*entities.Employee, error) {
 	var employee entities.Employee
-	err := s.db.Preload("Role").First(&employee, id).Error
+	err := s.db.Preload(clause.Associations).First(&employee, id).Error
 	if err != nil {
 		return nil, err
 	}

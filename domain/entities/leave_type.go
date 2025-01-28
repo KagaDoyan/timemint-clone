@@ -7,4 +7,5 @@ type LeaveType struct {
 	LeaveType   string
 	Description string
 	Payable     bool
+	AnnuallyMax int
 }

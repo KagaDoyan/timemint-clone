@@ -4,9 +4,11 @@ import "gorm.io/gorm"
 
 type Shift struct {
 	gorm.Model
-	Name        string `gorm:"size:100;not null"`
-	ShiftType   string `gorm:"type:enum('Permanent', 'One-Time');not null"` // Shift type
-	StartTime   string `gorm:"not null"`                                    // Shift start time
-	EndTime     string `gorm:"not null"`                                    // Shift end time
-	Description string `gorm:"type:text"`
+	Name         string     `gorm:"size:100;not null"`
+	Description  string     `gorm:"type:text"`
+	StartTime    string     `gorm:"not null"` // Shift start time
+	EndTime      string     `gorm:"not null"` // Shift end time
+	DepartmentID uint       `gorm:"not null;foreignKey:DepartmentID"`
+	Department   Department `gorm:"foreignKey:DepartmentID"`
+	Color        string
 }

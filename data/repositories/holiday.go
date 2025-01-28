@@ -36,7 +36,7 @@ func (r holidayRepository) FindAll(page, limit int) ([]entities.Holiday, int64, 
 	offset := (page - 1) * limit
 
 	// Apply pagination
-	err = r.db.Limit(limit).Offset(offset).Find(&holidays).Error
+	err = r.db.Limit(limit).Offset(offset).Order("created_at desc").Find(&holidays).Error
 	if err != nil {
 		return nil, 0, err
 	}

@@ -45,7 +45,7 @@ func (s employeeService) FindAll(page, limit int) ([]models.Employee, int64, err
 	for _, employee := range employees {
 		result = append(result, models.Employee{
 			ID:         employee.ID,
-			EmployeeID: employee.EmployeeID,
+			EmployeeNo: employee.EmployeeNo,
 			Name:       employee.Name,
 			Email:      employee.Email,
 			Phone:      employee.Phone,
@@ -55,6 +55,11 @@ func (s employeeService) FindAll(page, limit int) ([]models.Employee, int64, err
 			Role: models.Role{
 				ID:   employee.Role.ID,
 				Name: employee.Role.Name,
+			},
+			DepartmentID: employee.DepartmentID,
+			Department: models.Department{
+				ID:   employee.Department.ID,
+				Name: employee.Department.Name,
 			},
 			CreatedAt: employee.CreatedAt,
 			UpdatedAt: employee.UpdatedAt,
@@ -71,7 +76,7 @@ func (s employeeService) FindByID(id uint) (*models.Employee, error) {
 	}
 	return &models.Employee{
 		ID:         employee.ID,
-		EmployeeID: employee.EmployeeID,
+		EmployeeNo: employee.EmployeeNo,
 		Name:       employee.Name,
 		Email:      employee.Email,
 		Phone:      employee.Phone,
@@ -82,6 +87,11 @@ func (s employeeService) FindByID(id uint) (*models.Employee, error) {
 			ID:   employee.Role.ID,
 			Name: employee.Role.Name,
 		},
+		DepartmentID: employee.DepartmentID,
+		Department: models.Department{
+			ID:   employee.Department.ID,
+			Name: employee.Department.Name,
+		},
 		CreatedAt: employee.CreatedAt,
 		UpdatedAt: employee.UpdatedAt,
 	}, nil
@@ -90,13 +100,14 @@ func (s employeeService) FindByID(id uint) (*models.Employee, error) {
 func (s employeeService) Create(employee *models.Employee) (*models.Employee, error) {
 	// Convert model to entity
 	entityEmployee := &entities.Employee{
-		EmployeeID: employee.EmployeeID,
-		Name:       employee.Name,
-		Email:      employee.Email,
-		Phone:      employee.Phone,
-		Address:    employee.Address,
-		Position:   employee.Position,
-		RoleID:     employee.RoleID,
+		EmployeeNo:   employee.EmployeeNo,
+		DepartmentID: employee.DepartmentID,
+		Name:         employee.Name,
+		Email:        employee.Email,
+		Phone:        employee.Phone,
+		Address:      employee.Address,
+		Position:     employee.Position,
+		RoleID:       employee.RoleID,
 	}
 	data, err := s.employeerepo.Create(entityEmployee)
 	if err != nil {
@@ -114,6 +125,11 @@ func (s employeeService) Create(employee *models.Employee) (*models.Employee, er
 			ID:   data.Role.ID,
 			Name: data.Role.Name,
 		},
+		DepartmentID: data.DepartmentID,
+		Department: models.Department{
+			ID:   data.Department.ID,
+			Name: data.Department.Name,
+		},
 		CreatedAt: data.CreatedAt,
 		UpdatedAt: data.UpdatedAt,
 	}, nil
@@ -122,14 +138,15 @@ func (s employeeService) Create(employee *models.Employee) (*models.Employee, er
 func (s employeeService) Update(employee *models.Employee) (*models.Employee, error) {
 	// Convert model to entity
 	entityEmployee := &entities.Employee{
-		Model:      gorm.Model{ID: employee.ID},
-		Name:       employee.Name,
-		Email:      employee.Email,
-		Phone:      employee.Phone,
-		Address:    employee.Address,
-		Position:   employee.Position,
-		RoleID:     employee.RoleID,
-		EmployeeID: employee.EmployeeID,
+		Model:        gorm.Model{ID: employee.ID},
+		Name:         employee.Name,
+		Email:        employee.Email,
+		Phone:        employee.Phone,
+		Address:      employee.Address,
+		Position:     employee.Position,
+		RoleID:       employee.RoleID,
+		EmployeeNo:   employee.EmployeeNo,
+		DepartmentID: employee.DepartmentID,
 	}
 	data, err := s.employeerepo.Update(entityEmployee)
 	if err != nil {
@@ -138,7 +155,7 @@ func (s employeeService) Update(employee *models.Employee) (*models.Employee, er
 	}
 	return &models.Employee{
 		ID:         data.ID,
-		EmployeeID: data.EmployeeID,
+		EmployeeNo: data.EmployeeNo,
 		Name:       data.Name,
 		Email:      data.Email,
 		Phone:      data.Phone,
@@ -148,6 +165,11 @@ func (s employeeService) Update(employee *models.Employee) (*models.Employee, er
 		Role: models.Role{
 			ID:   data.Role.ID,
 			Name: data.Role.Name,
+		},
+		DepartmentID: data.DepartmentID,
+		Department: models.Department{
+			ID:   data.Department.ID,
+			Name: data.Department.Name,
 		},
 		CreatedAt: data.CreatedAt,
 		UpdatedAt: data.UpdatedAt,
@@ -173,6 +195,10 @@ func (s employeeService) FindByEmail(email string) (*models.Employee, error) {
 		Role: models.Role{
 			ID:   employee.Role.ID,
 			Name: employee.Role.Name,
+		},
+		Department: models.Department{
+			ID:   employee.Department.ID,
+			Name: employee.Department.Name,
 		},
 		CreatedAt: employee.CreatedAt,
 		UpdatedAt: employee.UpdatedAt,
@@ -205,6 +231,10 @@ func (s employeeService) Login(email, password string) (*models.Employee, error)
 		Role: models.Role{
 			ID:   employee.Role.ID,
 			Name: employee.Role.Name,
+		},
+		Department: models.Department{
+			ID:   employee.Department.ID,
+			Name: employee.Department.Name,
 		},
 		CreatedAt: employee.CreatedAt,
 		UpdatedAt: employee.UpdatedAt,

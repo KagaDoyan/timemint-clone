@@ -40,7 +40,7 @@ func (c roleController) FindAll(ctx *fiber.Ctx) error {
 		"limit":      limit,
 		"totalRows":  total,
 		"totalPages": totalPages,
-		"rows":       result,
+		"data":       result,
 	})
 }
 

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"go-fiber/api/middleware"
 	"go-fiber/data/services"
 	"go-fiber/domain/models"
@@ -8,11 +9,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type dayOfWorkController struct {
-	service services.DayOfWorkService
+type shiftController struct {
+	service services.ShiftService
 }
 
-type DayOfWorkController interface {
+type ShiftController interface {
 	FindAll(ctx *fiber.Ctx) error
 	FindByID(ctx *fiber.Ctx) error
 	Create(ctx *fiber.Ctx) error
@@ -20,13 +21,13 @@ type DayOfWorkController interface {
 	Delete(ctx *fiber.Ctx) error
 }
 
-func NewDayOfWorkController(service services.DayOfWorkService) DayOfWorkController {
-	return &dayOfWorkController{
+func NewShiftController(service services.ShiftService) ShiftController {
+	return &shiftController{
 		service: service,
 	}
 }
 
-func (c dayOfWorkController) FindAll(ctx *fiber.Ctx) error {
+func (c shiftController) FindAll(ctx *fiber.Ctx) error {
 	limit := ctx.QueryInt("limit", 10)
 	page := ctx.QueryInt("page", 1)
 
@@ -46,57 +47,55 @@ func (c dayOfWorkController) FindAll(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c dayOfWorkController) FindByID(ctx *fiber.Ctx) error {
-	id, err := ctx.ParamsInt("id")
+func (c shiftController) FindByID(ctx *fiber.Ctx) error {
+	shiftID, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorMessageResponse(ctx, errors.New("shift ID is required"))
 	}
 
-	result, err := c.service.FindByID(uint(id))
+	result, err := c.service.FindById(uint(shiftID))
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, result)
 }
 
-func (c dayOfWorkController) Create(ctx *fiber.Ctx) error {
-	var dayOfWork models.DayOfWork
-	if err := ctx.BodyParser(&dayOfWork); err != nil {
+func (c shiftController) Create(ctx *fiber.Ctx) error {
+	var shift models.Shift
+	if err := ctx.BodyParser(&shift); err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
-	data, err := c.service.Create(dayOfWork)
+
+	data, err := c.service.Create(shift)
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, data)
 }
 
-func (c dayOfWorkController) Update(ctx *fiber.Ctx) error {
-	id, err := ctx.ParamsInt("id")
+func (c shiftController) Update(ctx *fiber.Ctx) error {
+	shiftID, err := ctx.ParamsInt("id")
 	if err != nil {
+		return middleware.NewErrorMessageResponse(ctx, errors.New("shift ID is required"))
+	}
+	var shift models.Shift
+	if err := ctx.BodyParser(&shift); err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 
-	var dayOfWork models.DayOfWork
-	if err := ctx.BodyParser(&dayOfWork); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
-	}
-
-	// Ensure the ID from the path matches the body
-	dayOfWork.ID = uint(id)
-	data, err := c.service.Update(uint(id), dayOfWork)
+	data, err := c.service.Update(uint(shiftID), shift)
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, data)
 }
 
-func (c dayOfWorkController) Delete(ctx *fiber.Ctx) error {
-	id, err := ctx.ParamsInt("id")
+func (c shiftController) Delete(ctx *fiber.Ctx) error {
+	shiftID, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorMessageResponse(ctx, errors.New("shift ID is required"))
 	}
-	if err := c.service.Delete(uint(id)); err != nil {
+	if err := c.service.Delete(uint(shiftID)); err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, nil)

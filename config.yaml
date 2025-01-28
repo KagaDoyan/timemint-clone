@@ -5,8 +5,8 @@ database_erp:
   dbhost: localhost
   dbport: 3306
   username: root
-  password: 
-  dbname: timemint
+  password: hakase051199
+  dbname: attendance
 
 jwt:
   access_token: thisisasupersecretkey123
