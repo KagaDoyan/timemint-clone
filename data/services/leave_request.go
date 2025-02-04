@@ -4,6 +4,7 @@ import (
 	"go-fiber/data/repositories"
 	"go-fiber/domain/entities"
 	"go-fiber/domain/models"
+	"time"
 )
 
 type leaveRequestService struct {
@@ -15,8 +16,9 @@ type LeaveRequestService interface {
 	CraeteLeaveRequests(created_by uint, leave models.LeaveRequest) (*models.LeaveRequest, error)
 	Update(id uint, leaveRequest models.LeaveRequest) (*models.LeaveRequest, error)
 	Delete(id uint) error
-	FindAll(page, limit int, status string, employeeID uint) ([]models.LeaveRequest, int64, error)
+	FindAll(page, limit int, status string, employeeID uint, from, to string) ([]models.LeaveRequest, int64, int64, int64, int64, error)
 	FindById(id uint) (*models.LeaveRequest, error)
+	CalendarLeaves(month, year int) ([]models.LeaveRequest, error)
 }
 
 func NewLeaveRequestService(repo repositories.LeaveRequestRepository) LeaveRequestService {
@@ -128,6 +130,7 @@ func (s leaveRequestService) Update(id uint, leaveRequest models.LeaveRequest) (
 		EndDate:     leaveRequest.EndDate,
 		Reason:      leaveRequest.Reason,
 		Status:      leaveRequest.Status,
+		Remark:      leaveRequest.Remark,
 		FullDay:     leaveRequest.FullDay,
 	}
 
@@ -171,10 +174,22 @@ func (s leaveRequestService) Delete(id uint) error {
 	return s.repo.Delete(id)
 }
 
-func (s leaveRequestService) FindAll(page, limit int, status string, employeeID uint) ([]models.LeaveRequest, int64, error) {
-	results, total, err := s.repo.FindAll(page, limit, status, employeeID)
+func (s leaveRequestService) FindAll(page, limit int, status string, employeeID uint, from, to string) ([]models.LeaveRequest, int64, int64, int64, int64, error) {
+	if len(from) > 0 && len(to) > 0 {
+		fromDate, err := time.Parse("02-01-2006", from)
+		if err != nil {
+			return nil, 0, 0, 0, 0, err
+		}
+		toDate, err := time.Parse("02-01-2006", to)
+		if err != nil {
+			return nil, 0, 0, 0, 0, err
+		}
+		from = fromDate.Format("02-01-2006")
+		to = toDate.Format("02-01-2006")
+	}
+	results, total, totalPending, totalApproved, totalRejected, err := s.repo.FindAll(page, limit, status, employeeID, from, to)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, 0, 0, err
 	}
 	var leaveRequests []models.LeaveRequest
 	for _, result := range results {
@@ -190,8 +205,9 @@ func (s leaveRequestService) FindAll(page, limit int, status string, employeeID 
 			ID:         result.ID,
 			EmployeeID: result.EmployeeID,
 			Employee: models.Employee{
-				ID:   result.EmployeeID,
-				Name: result.Employee.Name,
+				ID:         result.EmployeeID,
+				EmployeeNo: result.Employee.EmployeeNo,
+				Name:       result.Employee.Name,
 			},
 			LeaveType: models.LeaveType{
 				ID:          result.LeaveTypeID,
@@ -209,7 +225,7 @@ func (s leaveRequestService) FindAll(page, limit int, status string, employeeID 
 			Reviewer:    reviewer,
 		})
 	}
-	return leaveRequests, total, nil
+	return leaveRequests, total, totalPending, totalApproved, totalRejected, nil
 }
 
 func (s leaveRequestService) FindById(id uint) (*models.LeaveRequest, error) {
@@ -247,4 +263,36 @@ func (s leaveRequestService) FindById(id uint) (*models.LeaveRequest, error) {
 		FullDay:     result.FullDay,
 		Reviewer:    reviewer,
 	}, nil
+}
+
+func (s leaveRequestService) CalendarLeaves(month, year int) ([]models.LeaveRequest, error) {
+	datas, err := s.repo.CalendarLeaves(month, year)
+	if err != nil {
+		return nil, err
+	}
+	var results []models.LeaveRequest
+	for _, data := range datas {
+		results = append(results, models.LeaveRequest{
+			ID:         data.ID,
+			EmployeeID: data.EmployeeID,
+			Employee: models.Employee{
+				ID:   data.EmployeeID,
+				Name: data.Employee.Name,
+			},
+			LeaveType: models.LeaveType{
+				ID:          data.LeaveTypeID,
+				LeaveType:   data.LeaveType.LeaveType,
+				Description: data.LeaveType.Description,
+				Payable:     data.LeaveType.Payable,
+				AnnuallyMax: data.LeaveType.AnnuallyMax,
+			},
+			LeaveTypeID: data.LeaveTypeID,
+			StartDate:   data.StartDate,
+			EndDate:     data.EndDate,
+			Reason:      data.Reason,
+			Status:      data.Status,
+			FullDay:     data.FullDay,
+		})
+	}
+	return results, nil
 }

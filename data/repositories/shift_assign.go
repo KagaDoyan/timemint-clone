@@ -17,21 +17,23 @@ type ShiftAssignRepository interface {
 	Delete(id uint) error
 	FindAll(page, limit int) ([]entities.ShiftAssignment, int64, error)
 	FindById(id uint) (*entities.ShiftAssignment, error)
+	CalendarShift(month, year int) ([]entities.ShiftAssignment, error)
 }
 
 func NewShiftAssignRepository(db *gorm.DB) ShiftAssignRepository {
+	db.AutoMigrate(&entities.ShiftAssignment{})
 	return &shiftAssignRepository{
 		db: db,
 	}
 }
 
 func (r shiftAssignRepository) Create(shiftAssign entities.ShiftAssignment) (*entities.ShiftAssignment, error) {
-	err := r.db.Create(&shiftAssign).Error
+	err := r.db.Where("employee_id = ? AND shift_id = ? AND date = ?", shiftAssign.EmployeeID, shiftAssign.ShiftID, shiftAssign.Date).FirstOrCreate(&shiftAssign).Error
 	if err != nil {
 		return nil, err
 	}
 	var result entities.ShiftAssignment
-	err = r.db.First(&result, shiftAssign.ID).Error
+	err = r.db.Preload(clause.Associations).First(&result, shiftAssign.ID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +64,7 @@ func (r shiftAssignRepository) FindAll(page, limit int) ([]entities.ShiftAssignm
 		return nil, 0, err
 	}
 	offset := (page - 1) * limit
-	err = r.db.Offset(offset).Limit(limit).Preload(clause.Associations).Find(&shiftAssigns).Error
+	err = r.db.Offset(offset).Limit(limit).Order("created_at desc").Preload(clause.Associations).Preload("Employee.Role").Find(&shiftAssigns).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -71,9 +73,18 @@ func (r shiftAssignRepository) FindAll(page, limit int) ([]entities.ShiftAssignm
 
 func (r shiftAssignRepository) FindById(id uint) (*entities.ShiftAssignment, error) {
 	var shiftAssign entities.ShiftAssignment
-	err := r.db.Preload(clause.Associations).First(&shiftAssign, id).Error
+	err := r.db.Preload(clause.Associations).Preload("Employee.Role").First(&shiftAssign, id).Error
 	if err != nil {
 		return nil, err
 	}
 	return &shiftAssign, nil
+}
+
+func (r shiftAssignRepository) CalendarShift(month int, year int) ([]entities.ShiftAssignment, error) {
+	var shiftAssigns []entities.ShiftAssignment
+	err := r.db.Preload(clause.Associations).Preload("Employee.Role").Where("MONTH(date) = ? AND YEAR(date) = ?", month, year).Find(&shiftAssigns).Error
+	if err != nil {
+		return nil, err
+	}
+	return shiftAssigns, nil
 }

@@ -2,6 +2,7 @@ package route
 
 import (
 	"go-fiber/api/controller"
+	"go-fiber/api/middleware"
 	"go-fiber/data/repositories"
 	"go-fiber/data/services"
 
@@ -14,11 +15,12 @@ func NewLeaveRequestRoute(app fiber.Router, db *gorm.DB) {
 	leaveService := services.NewLeaveRequestService(leaveRepository)
 	leaveRequestController := controller.NewLeaveRequestController(leaveService)
 
-	leaveRequest := app.Group("/leave-requests")
+	leaveRequest := app.Group("/leave-requests", middleware.AccessToken)
 	leaveRequest.Get("/all", leaveRequestController.FindAll)
 	leaveRequest.Get("/id/:id", leaveRequestController.FindByID)
-	leaveRequest.Post("/create", leaveRequestController.AdminLeaveCraete)
+	leaveRequest.Post("/create", middleware.WithRoles(middleware.RoleAdmin, middleware.RoleManager), leaveRequestController.AdminLeaveCraete)
 	leaveRequest.Post("/request", leaveRequestController.EmpLeaveRequest)
-	leaveRequest.Put("/:id", leaveRequestController.Update)
+	leaveRequest.Put("/:id", middleware.WithRoles(middleware.RoleAdmin, middleware.RoleManager), leaveRequestController.Update)
 	leaveRequest.Delete("/:id", leaveRequestController.Delete)
+	leaveRequest.Get("/calendar/:month/:year", leaveRequestController.CalendarLeaves)
 }

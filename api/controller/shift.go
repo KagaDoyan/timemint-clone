@@ -19,12 +19,21 @@ type ShiftController interface {
 	Create(ctx *fiber.Ctx) error
 	Update(ctx *fiber.Ctx) error
 	Delete(ctx *fiber.Ctx) error
+	Option(ctx *fiber.Ctx) error
 }
 
 func NewShiftController(service services.ShiftService) ShiftController {
 	return &shiftController{
 		service: service,
 	}
+}
+
+func (c shiftController) Option(ctx *fiber.Ctx) error {
+	datas, err := c.service.Option()
+	if err != nil {
+		return middleware.NewErrorMessageResponse(ctx, err)
+	}
+	return middleware.NewSuccessResponse(ctx, datas)
 }
 
 func (c shiftController) FindAll(ctx *fiber.Ctx) error {

@@ -6,11 +6,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type Holiday struct {
+type Event struct {
 	gorm.Model
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	StartDate   time.Time `json:"start_date"`
-	EndDate     time.Time `json:"end_date"`
+	EventType   string    `json:"type"`
+	Start       string    `json:"start"`
+	End         string    `json:"end"`
+	Date        time.Time `json:"date"`
 	CreatedBy   uint      `json:"created_by"`
 }

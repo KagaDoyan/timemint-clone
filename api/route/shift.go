@@ -18,8 +18,9 @@ func NewShiftRouter(router fiber.Router, db *gorm.DB) {
 	{
 		shiftRoute.Get("/all", shiftController.FindAll)
 		shiftRoute.Get("/id/:id", shiftController.FindByID)
-		shiftRoute.Post("/", shiftController.Create)
-		shiftRoute.Put("/:id", shiftController.Update)
-		shiftRoute.Delete("/:id", shiftController.Delete)
+		shiftRoute.Post("/", middleware.WithRoles(middleware.RoleAdmin, middleware.RoleManager), shiftController.Create)
+		shiftRoute.Put("/:id", middleware.WithRoles(middleware.RoleAdmin, middleware.RoleManager), shiftController.Update)
+		shiftRoute.Delete("/:id", middleware.WithRoles(middleware.RoleAdmin, middleware.RoleManager), shiftController.Delete)
+		shiftRoute.Get("/options", shiftController.Option)
 	}
 }

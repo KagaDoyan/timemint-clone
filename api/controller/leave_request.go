@@ -19,6 +19,7 @@ type LeaveRequestController interface {
 	Delete(ctx *fiber.Ctx) error
 	FindAll(ctx *fiber.Ctx) error
 	FindByID(ctx *fiber.Ctx) error
+	CalendarLeaves(ctx *fiber.Ctx) error
 }
 
 func NewLeaveRequestController(service services.LeaveRequestService) LeaveRequestController {
@@ -70,6 +71,12 @@ func (c leaveRequestController) Update(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&leaverequest); err != nil {
 		return err
 	}
+	userID, err := middleware.GetOwnerAccessToken(ctx)
+	if err != nil {
+		return err
+	}
+	employeeID := *userID
+	leaverequest.ReviewerID = employeeID
 	result, err := c.LeaveRequestService.Update(uint(id), leaverequest)
 	if err != nil {
 		return err
@@ -92,19 +99,24 @@ func (c leaveRequestController) FindAll(ctx *fiber.Ctx) error {
 	limit := ctx.QueryInt("limit", 10)
 	page := ctx.QueryInt("page", 1)
 	status := ctx.Query("status")
+	from := ctx.Query("from")
+	to := ctx.Query("to")
 	empID := ctx.QueryInt("empID")
-	result, total, err := c.LeaveRequestService.FindAll(page, limit, status, uint(empID))
+	result, total, totalPending, totalApproved, totalRejected, err := c.LeaveRequestService.FindAll(page, limit, status, uint(empID), from, to)
 	if err != nil {
 		return err
 	}
 	//find total page
 	totalPages := (total + int64(limit) - 1) / int64(limit)
 	return middleware.NewSuccessResponse(ctx, fiber.Map{
-		"page":       page,
-		"limit":      limit,
-		"totalRows":  total,
-		"totalPages": totalPages,
-		"data":       result,
+		"page":          page,
+		"limit":         limit,
+		"totalRows":     total,
+		"totalPages":    totalPages,
+		"data":          result,
+		"totalPending":  totalPending,
+		"totalApproved": totalApproved,
+		"totalRejected": totalRejected,
 	})
 }
 
@@ -114,6 +126,22 @@ func (c leaveRequestController) FindByID(ctx *fiber.Ctx) error {
 		return err
 	}
 	result, err := c.LeaveRequestService.FindById(uint(id))
+	if err != nil {
+		return err
+	}
+	return middleware.NewSuccessResponse(ctx, result)
+}
+
+func (c leaveRequestController) CalendarLeaves(ctx *fiber.Ctx) error {
+	month, err := ctx.ParamsInt("month")
+	if err != nil {
+		return err
+	}
+	year, err := ctx.ParamsInt("year")
+	if err != nil {
+		return err
+	}
+	result, err := c.LeaveRequestService.CalendarLeaves(month, year)
 	if err != nil {
 		return err
 	}

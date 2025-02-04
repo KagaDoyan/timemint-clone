@@ -12,6 +12,7 @@ type LeaveRequest struct {
 	FullDay     bool      `gorm:"not null"`         // Is it a full day leave?
 	Status      string    `gorm:"size:20;not null"` // Status: "Pending", "Approved", "Rejected"
 	Reason      string    `gorm:"type:text"`        // Reason for leave (optional)
+	Remark      string
 	Employee    Employee
 	ReviewerID  *uint     // Nullable foreign key for Reviewer
 	Reviewer    *Employee `gorm:"foreignKey:ReviewerID"` // Nullable reference to the reviewing employee

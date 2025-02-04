@@ -18,6 +18,17 @@ type EmployeeRepository interface {
 	Update(employee *entities.Employee) (*entities.Employee, error)
 	Delete(id uint) error
 	FindByEmail(email string) (*entities.Employee, error)
+	Option() ([]entities.Employee, error)
+	EmployeeReport() ([]entities.Employee, error)
+}
+
+func (s employeeRepository) Option() ([]entities.Employee, error) {
+	var employees []entities.Employee
+	err := s.db.Preload(clause.Associations).Find(&employees).Error
+	if err != nil {
+		return nil, err
+	}
+	return employees, nil
 }
 
 func (s employeeRepository) FindAll(page, limit int) ([]entities.Employee, int64, error) {
@@ -33,7 +44,7 @@ func (s employeeRepository) FindAll(page, limit int) ([]entities.Employee, int64
 	}
 
 	// Find paginated records
-	err := s.db.Offset(offset).Limit(limit).Preload(clause.Associations).Find(&employees).Error
+	err := s.db.Offset(offset).Limit(limit).Order("created_at desc").Preload(clause.Associations).Find(&employees).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -65,7 +76,7 @@ func (s employeeRepository) Create(employee *entities.Employee) (*entities.Emplo
 
 func (s employeeRepository) Update(employee *entities.Employee) (*entities.Employee, error) {
 	//use update function
-	err := s.db.Select("name", "email", "phone", "address", "position", "role_id", "employee_id").Updates(employee).Error
+	err := s.db.Select("name", "email", "phone", "address", "position", "role_id", "employee_no", "department").Updates(employee).Error
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +104,15 @@ func (s employeeRepository) FindByEmail(email string) (*entities.Employee, error
 		return nil, err
 	}
 	return &employee, nil
+}
+
+func (s employeeRepository) EmployeeReport() ([]entities.Employee, error) {
+	var employee []entities.Employee
+	err := s.db.Preload(clause.Associations).Find(&employee).Error
+	if err != nil {
+		return nil, err
+	}
+	return employee, nil
 }
 
 func NewEmployeeRepository(db *gorm.DB) EmployeeRepository {

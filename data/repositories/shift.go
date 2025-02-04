@@ -13,6 +13,7 @@ type ShiftRepository interface {
 	FindById(id uint) (*entities.Shift, error)
 	Update(id uint, shift entities.Shift) (*entities.Shift, error)
 	Delete(id uint) error
+	Option() ([]entities.Shift, error)
 }
 
 type shiftRepositoryImpl struct {
@@ -24,6 +25,14 @@ func NewShiftRepository(db *gorm.DB) ShiftRepository {
 	return &shiftRepositoryImpl{db: db}
 }
 
+func (r shiftRepositoryImpl) Option() ([]entities.Shift, error) {
+	var result []entities.Shift
+	err := r.db.Preload(clause.Associations).Find(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
 func (r shiftRepositoryImpl) Create(shift entities.Shift) (*entities.Shift, error) {
 	err := r.db.Create(&shift).Error
 	if err != nil {
@@ -66,7 +75,7 @@ func (r shiftRepositoryImpl) FindAll(page, limit int) ([]entities.Shift, int64, 
 		return nil, 0, err
 	}
 	offset := (page - 1) * limit
-	err = r.db.Offset(offset).Limit(limit).Preload(clause.Associations).Find(&shifts).Error
+	err = r.db.Offset(offset).Limit(limit).Order("created_at desc").Preload(clause.Associations).Find(&shifts).Error
 	if err != nil {
 		return nil, 0, err
 	}

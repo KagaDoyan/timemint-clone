@@ -74,7 +74,7 @@ func (r leaveTypeRepository) FindAll(page, limit int) ([]entities.LeaveType, int
 		return nil, 0, err
 	}
 	offset := (page - 1) * limit
-	err = r.db.Offset(offset).Limit(limit).Find(&leaveTypes).Error
+	err = r.db.Offset(offset).Limit(limit).Order("created_at desc").Find(&leaveTypes).Error
 	if err != nil {
 		return nil, 0, err
 	}

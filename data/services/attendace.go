@@ -15,28 +15,28 @@ type AttendanceService interface {
 type attendanceService struct {
 	attendanceRepo repositories.AttendanceRepository
 	workerRepo     repositories.DayOfWorkRepository
-	holidayRepo    repositories.HolidayRepository
+	// holidayRepo    repositories.HolidayRepository
 	policyRepo     repositories.AttendancePolicyRepository
 }
 
-func NewAttendanceService(attendanceRepo repositories.AttendanceRepository, workerRepo repositories.DayOfWorkRepository, holidayRepo repositories.HolidayRepository, policyRepo repositories.AttendancePolicyRepository) AttendanceService {
+func NewAttendanceService(attendanceRepo repositories.AttendanceRepository, workerRepo repositories.DayOfWorkRepository, policyRepo repositories.AttendancePolicyRepository) AttendanceService {
 	return &attendanceService{
 		attendanceRepo: attendanceRepo,
 		workerRepo:     workerRepo,
-		holidayRepo:    holidayRepo,
+		// holidayRepo:    holidayRepo,
 		policyRepo:     policyRepo,
 	}
 }
 
 func (s attendanceService) CheckIn(employeeID uint) (*entities.Attendance, error) {
 	today := time.Now()
-	isholiday, err := s.holidayRepo.IsHoliday(today)
-	if err != nil {
-		return nil, err
-	}
-	if isholiday {
-		return nil, errors.New("today is holiday go spend the day")
-	}
+	// isholiday, err := s.holidayRepo.IsHoliday(today)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if isholiday {
+	// 	return nil, errors.New("today is holiday go spend the day")
+	// }
 	policy, err := s.policyRepo.Find()
 	if err != nil {
 		return nil, err

@@ -19,10 +19,38 @@ type EmployeeService interface {
 	Delete(id uint) error
 	FindByEmail(email string) (*models.Employee, error)
 	Login(email, password string) (*models.Employee, error)
+	Option() ([]models.Employee, error)
+	EmployeeReport() ([]models.Employee, error)
 }
 
 type employeeService struct {
 	employeerepo repositories.EmployeeRepository
+}
+
+func (s employeeService) Option() ([]models.Employee, error) {
+	employees, err := s.employeerepo.Option()
+	if err != nil {
+		return nil, err
+	}
+	var result []models.Employee
+	for _, employee := range employees {
+		result = append(result, models.Employee{
+			ID:         employee.ID,
+			EmployeeNo: employee.EmployeeNo,
+			Name:       employee.Name,
+			Email:      employee.Email,
+			Phone:      employee.Phone,
+			Address:    employee.Address,
+			Position:   employee.Position,
+			RoleID:     employee.RoleID,
+			Role: models.Role{
+				ID:   employee.Role.ID,
+				Name: employee.Role.Name,
+			},
+			Department: employee.Department,
+		})
+	}
+	return result, nil
 }
 
 func (s employeeService) FindAll(page, limit int) ([]models.Employee, int64, error) {
@@ -56,13 +84,9 @@ func (s employeeService) FindAll(page, limit int) ([]models.Employee, int64, err
 				ID:   employee.Role.ID,
 				Name: employee.Role.Name,
 			},
-			DepartmentID: employee.DepartmentID,
-			Department: models.Department{
-				ID:   employee.Department.ID,
-				Name: employee.Department.Name,
-			},
-			CreatedAt: employee.CreatedAt,
-			UpdatedAt: employee.UpdatedAt,
+			Department: employee.Department,
+			CreatedAt:  employee.CreatedAt,
+			UpdatedAt:  employee.UpdatedAt,
 		})
 	}
 
@@ -87,27 +111,23 @@ func (s employeeService) FindByID(id uint) (*models.Employee, error) {
 			ID:   employee.Role.ID,
 			Name: employee.Role.Name,
 		},
-		DepartmentID: employee.DepartmentID,
-		Department: models.Department{
-			ID:   employee.Department.ID,
-			Name: employee.Department.Name,
-		},
-		CreatedAt: employee.CreatedAt,
-		UpdatedAt: employee.UpdatedAt,
+		Department: employee.Department,
+		CreatedAt:  employee.CreatedAt,
+		UpdatedAt:  employee.UpdatedAt,
 	}, nil
 }
 
 func (s employeeService) Create(employee *models.Employee) (*models.Employee, error) {
 	// Convert model to entity
 	entityEmployee := &entities.Employee{
-		EmployeeNo:   employee.EmployeeNo,
-		DepartmentID: employee.DepartmentID,
-		Name:         employee.Name,
-		Email:        employee.Email,
-		Phone:        employee.Phone,
-		Address:      employee.Address,
-		Position:     employee.Position,
-		RoleID:       employee.RoleID,
+		EmployeeNo: employee.EmployeeNo,
+		Department: employee.Department,
+		Name:       employee.Name,
+		Email:      employee.Email,
+		Phone:      employee.Phone,
+		Address:    employee.Address,
+		Position:   employee.Position,
+		RoleID:     employee.RoleID,
 	}
 	data, err := s.employeerepo.Create(entityEmployee)
 	if err != nil {
@@ -125,28 +145,24 @@ func (s employeeService) Create(employee *models.Employee) (*models.Employee, er
 			ID:   data.Role.ID,
 			Name: data.Role.Name,
 		},
-		DepartmentID: data.DepartmentID,
-		Department: models.Department{
-			ID:   data.Department.ID,
-			Name: data.Department.Name,
-		},
-		CreatedAt: data.CreatedAt,
-		UpdatedAt: data.UpdatedAt,
+		Department: data.Department,
+		CreatedAt:  data.CreatedAt,
+		UpdatedAt:  data.UpdatedAt,
 	}, nil
 }
 
 func (s employeeService) Update(employee *models.Employee) (*models.Employee, error) {
 	// Convert model to entity
 	entityEmployee := &entities.Employee{
-		Model:        gorm.Model{ID: employee.ID},
-		Name:         employee.Name,
-		Email:        employee.Email,
-		Phone:        employee.Phone,
-		Address:      employee.Address,
-		Position:     employee.Position,
-		RoleID:       employee.RoleID,
-		EmployeeNo:   employee.EmployeeNo,
-		DepartmentID: employee.DepartmentID,
+		Model:      gorm.Model{ID: employee.ID},
+		Name:       employee.Name,
+		Email:      employee.Email,
+		Phone:      employee.Phone,
+		Address:    employee.Address,
+		Position:   employee.Position,
+		RoleID:     employee.RoleID,
+		EmployeeNo: employee.EmployeeNo,
+		Department: employee.Department,
 	}
 	data, err := s.employeerepo.Update(entityEmployee)
 	if err != nil {
@@ -166,13 +182,9 @@ func (s employeeService) Update(employee *models.Employee) (*models.Employee, er
 			ID:   data.Role.ID,
 			Name: data.Role.Name,
 		},
-		DepartmentID: data.DepartmentID,
-		Department: models.Department{
-			ID:   data.Department.ID,
-			Name: data.Department.Name,
-		},
-		CreatedAt: data.CreatedAt,
-		UpdatedAt: data.UpdatedAt,
+		Department: data.Department,
+		CreatedAt:  data.CreatedAt,
+		UpdatedAt:  data.UpdatedAt,
 	}, nil
 }
 
@@ -196,12 +208,9 @@ func (s employeeService) FindByEmail(email string) (*models.Employee, error) {
 			ID:   employee.Role.ID,
 			Name: employee.Role.Name,
 		},
-		Department: models.Department{
-			ID:   employee.Department.ID,
-			Name: employee.Department.Name,
-		},
-		CreatedAt: employee.CreatedAt,
-		UpdatedAt: employee.UpdatedAt,
+		Department: employee.Department,
+		CreatedAt:  employee.CreatedAt,
+		UpdatedAt:  employee.UpdatedAt,
 	}, nil
 }
 
@@ -232,13 +241,38 @@ func (s employeeService) Login(email, password string) (*models.Employee, error)
 			ID:   employee.Role.ID,
 			Name: employee.Role.Name,
 		},
-		Department: models.Department{
-			ID:   employee.Department.ID,
-			Name: employee.Department.Name,
-		},
-		CreatedAt: employee.CreatedAt,
-		UpdatedAt: employee.UpdatedAt,
+		Department: employee.Department,
+		CreatedAt:  employee.CreatedAt,
+		UpdatedAt:  employee.UpdatedAt,
 	}, nil
+}
+
+func (s employeeService) EmployeeReport() ([]models.Employee, error) {
+	employees, err := s.employeerepo.EmployeeReport()
+	if err != nil {
+		return nil, err
+	}
+	var result []models.Employee
+	for _, employee := range employees {
+		result = append(result, models.Employee{
+			ID:         employee.ID,
+			EmployeeNo: employee.EmployeeNo,
+			Name:       employee.Name,
+			Email:      employee.Email,
+			Phone:      employee.Phone,
+			Address:    employee.Address,
+			Position:   employee.Position,
+			RoleID:     employee.RoleID,
+			Role: models.Role{
+				ID:   employee.Role.ID,
+				Name: employee.Role.Name,
+			},
+			Department: employee.Department,
+			CreatedAt:  employee.CreatedAt,
+			UpdatedAt:  employee.UpdatedAt,
+		})
+	}
+	return result, nil
 }
 
 func NewEmployeeServices(employeerepo repositories.EmployeeRepository) EmployeeService {

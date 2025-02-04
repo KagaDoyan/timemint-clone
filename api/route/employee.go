@@ -56,5 +56,15 @@ func NewEmployeeRouter(router fiber.Router, db *gorm.DB) {
 			middleware.AccessToken,
 			middleware.WithRoles(middleware.RoleAdmin),
 			employeeController.Delete)
+
+		employee_route.Get("/options",
+			middleware.AccessToken,
+			middleware.WithRoles(middleware.RoleAdmin, middleware.RoleManager, middleware.RoleEmployee),
+			employeeController.Option)
+
+		employee_route.Get("/report",
+			middleware.AccessToken,
+			middleware.WithRoles(middleware.RoleAdmin, middleware.RoleManager),
+			employeeController.EmployeeReport)
 	}
 }

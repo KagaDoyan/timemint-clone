@@ -11,6 +11,7 @@ type LeaveRequest struct {
 	StartDate   string    `json:"start_date"`
 	EndDate     string    `json:"end_date"`
 	Reason      string    `json:"reason"`
+	Remark      string    `json:"remark"`
 	Status      string    `json:"status"`
 	FullDay     bool      `json:"full_day"`
 	CreatedAt   time.Time `json:"created_at"`

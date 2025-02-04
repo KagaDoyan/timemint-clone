@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"go-fiber/api/middleware"
 	"go-fiber/data/services"
 	"go-fiber/domain/models"
@@ -8,32 +9,33 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type holidayController struct {
-	service services.HolidayService
+type eventController struct {
+	service services.EventService
 }
 
-type HolidayController interface {
+type EventController interface {
 	FindAll(ctx *fiber.Ctx) error
 	Create(ctx *fiber.Ctx) error
 	Update(ctx *fiber.Ctx) error
 	Delete(ctx *fiber.Ctx) error
-	IsHoliday(ctx *fiber.Ctx) error
+	IsEvent(ctx *fiber.Ctx) error
+	CalendarEvent(ctx *fiber.Ctx) error
 }
 
-func NewHolidayController(service services.HolidayService) HolidayController {
-	return &holidayController{service}
+func NewEventController(service services.EventService) EventController {
+	return &eventController{service}
 }
 
-func (c holidayController) IsHoliday(ctx *fiber.Ctx) error {
+func (c eventController) IsEvent(ctx *fiber.Ctx) error {
 	date := ctx.Params("date")
-	isHoliday, err := c.service.IsHoliday(date)
+	isEvent, err := c.service.IsEvent(date)
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
-	return middleware.NewSuccessResponse(ctx, isHoliday)
+	return middleware.NewSuccessResponse(ctx, isEvent)
 }
 
-func (c holidayController) FindAll(ctx *fiber.Ctx) error {
+func (c eventController) FindAll(ctx *fiber.Ctx) error {
 	limit := ctx.QueryInt("limit", 10)
 	page := ctx.QueryInt("page", 1)
 
@@ -52,40 +54,40 @@ func (c holidayController) FindAll(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c holidayController) Create(ctx *fiber.Ctx) error {
-	var holiday models.Holiday
-	if err := ctx.BodyParser(&holiday); err != nil {
+func (c eventController) Create(ctx *fiber.Ctx) error {
+	var event models.Event
+	if err := ctx.BodyParser(&event); err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 	userID, err := middleware.GetOwnerAccessToken(ctx)
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
-	holiday.CreatedBy = *userID
-	date, err := c.service.Create(holiday)
+	event.CreatedBy = *userID
+	inserted, err := c.service.Create(event)
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
-	return middleware.NewSuccessResponse(ctx, date)
+	return middleware.NewSuccessMessageResponse(ctx, fmt.Sprintf("Event created %d", inserted))
 }
 
-func (c holidayController) Update(ctx *fiber.Ctx) error {
+func (c eventController) Update(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
-	var holiday models.Holiday
-	if err := ctx.BodyParser(&holiday); err != nil {
+	var event models.Event
+	if err := ctx.BodyParser(&event); err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
-	data, err := c.service.Update(uint(id), holiday)
+	data, err := c.service.Update(uint(id), event)
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, data)
 }
 
-func (c holidayController) Delete(ctx *fiber.Ctx) error {
+func (c eventController) Delete(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
 		return middleware.NewErrorMessageResponse(ctx, err)
@@ -94,4 +96,20 @@ func (c holidayController) Delete(ctx *fiber.Ctx) error {
 		return middleware.NewErrorMessageResponse(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, nil)
+}
+
+func (c eventController) CalendarEvent(ctx *fiber.Ctx) error {
+	month, err := ctx.ParamsInt("month")
+	if err != nil {
+		return middleware.NewErrorMessageResponse(ctx, err)
+	}
+	year, err := ctx.ParamsInt("year")
+	if err != nil {
+		return middleware.NewErrorMessageResponse(ctx, err)
+	}
+	result, err := c.service.CalendarEvent(month, year)
+	if err != nil {
+		return middleware.NewErrorMessageResponse(ctx, err)
+	}
+	return middleware.NewSuccessResponse(ctx, result)
 }
