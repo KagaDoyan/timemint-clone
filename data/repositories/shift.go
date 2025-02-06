@@ -14,18 +14,19 @@ type ShiftRepository interface {
 	Update(id uint, shift entities.Shift) (*entities.Shift, error)
 	Delete(id uint) error
 	Option() ([]entities.Shift, error)
+	ShiftReport() ([]entities.Shift, error)
 }
 
-type shiftRepositoryImpl struct {
+type shiftRepository struct {
 	db *gorm.DB
 }
 
 func NewShiftRepository(db *gorm.DB) ShiftRepository {
 	db.AutoMigrate(&entities.Shift{})
-	return &shiftRepositoryImpl{db: db}
+	return &shiftRepository{db: db}
 }
 
-func (r shiftRepositoryImpl) Option() ([]entities.Shift, error) {
+func (r shiftRepository) Option() ([]entities.Shift, error) {
 	var result []entities.Shift
 	err := r.db.Preload(clause.Associations).Find(&result).Error
 	if err != nil {
@@ -33,7 +34,7 @@ func (r shiftRepositoryImpl) Option() ([]entities.Shift, error) {
 	}
 	return result, nil
 }
-func (r shiftRepositoryImpl) Create(shift entities.Shift) (*entities.Shift, error) {
+func (r shiftRepository) Create(shift entities.Shift) (*entities.Shift, error) {
 	err := r.db.Create(&shift).Error
 	if err != nil {
 		return nil, err
@@ -46,7 +47,7 @@ func (r shiftRepositoryImpl) Create(shift entities.Shift) (*entities.Shift, erro
 	return &result, nil
 }
 
-func (r shiftRepositoryImpl) Update(id uint, shift entities.Shift) (*entities.Shift, error) {
+func (r shiftRepository) Update(id uint, shift entities.Shift) (*entities.Shift, error) {
 	err := r.db.Model(&entities.Shift{}).Where("id = ?", id).Updates(&shift).Error
 	if err != nil {
 		return nil, err
@@ -59,7 +60,7 @@ func (r shiftRepositoryImpl) Update(id uint, shift entities.Shift) (*entities.Sh
 	return &result, nil
 }
 
-func (r shiftRepositoryImpl) Delete(id uint) error {
+func (r shiftRepository) Delete(id uint) error {
 	err := r.db.Unscoped().Delete(&entities.Shift{}, id).Error
 	if err != nil {
 		return err
@@ -67,7 +68,7 @@ func (r shiftRepositoryImpl) Delete(id uint) error {
 	return nil
 }
 
-func (r shiftRepositoryImpl) FindAll(page, limit int) ([]entities.Shift, int64, error) {
+func (r shiftRepository) FindAll(page, limit int) ([]entities.Shift, int64, error) {
 	var shifts []entities.Shift
 	var total int64
 	err := r.db.Model(&entities.Shift{}).Count(&total).Error
@@ -82,11 +83,20 @@ func (r shiftRepositoryImpl) FindAll(page, limit int) ([]entities.Shift, int64, 
 	return shifts, total, nil
 }
 
-func (r shiftRepositoryImpl) FindById(id uint) (*entities.Shift, error) {
+func (r shiftRepository) FindById(id uint) (*entities.Shift, error) {
 	var shift entities.Shift
 	err := r.db.Preload(clause.Associations).First(&shift, id).Error
 	if err != nil {
 		return nil, err
 	}
 	return &shift, nil
+}
+
+func (r shiftRepository) ShiftReport() ([]entities.Shift, error) {
+	var shifts []entities.Shift
+	err := r.db.Preload(clause.Associations).Find(&shifts).Error
+	if err != nil {
+		return nil, err
+	}
+	return shifts, nil
 }

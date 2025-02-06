@@ -30,7 +30,7 @@ func (c roleController) FindAll(ctx *fiber.Ctx) error {
 
 	result, total, err := c.roleService.FindAll(page, limit)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	totalPages := (total + int64(limit) - 1) / int64(limit)
@@ -47,12 +47,12 @@ func (c roleController) FindAll(ctx *fiber.Ctx) error {
 func (c roleController) FindByID(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	result, err := c.roleService.FindByID(uint(id))
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, result)
 }
@@ -60,11 +60,11 @@ func (c roleController) FindByID(ctx *fiber.Ctx) error {
 func (c roleController) Create(ctx *fiber.Ctx) error {
 	var role models.Role
 	if err := ctx.BodyParser(&role); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	data, err := c.roleService.Create(role)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, data)
 }
@@ -72,19 +72,19 @@ func (c roleController) Create(ctx *fiber.Ctx) error {
 func (c roleController) Update(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	var role models.Role
 	if err := ctx.BodyParser(&role); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	// Ensure the ID from the path matches the body
 	role.ID = uint(id)
 	data, err := c.roleService.Update(uint(id), role)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, data)
 }
@@ -92,10 +92,10 @@ func (c roleController) Update(ctx *fiber.Ctx) error {
 func (c roleController) Delete(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	if err := c.roleService.Delete(uint(id)); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, nil)
 }

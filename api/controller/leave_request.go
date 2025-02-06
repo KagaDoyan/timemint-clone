@@ -20,6 +20,7 @@ type LeaveRequestController interface {
 	FindAll(ctx *fiber.Ctx) error
 	FindByID(ctx *fiber.Ctx) error
 	CalendarLeaves(ctx *fiber.Ctx) error
+	LeaveRequestReport(ctx *fiber.Ctx) error
 }
 
 func NewLeaveRequestController(service services.LeaveRequestService) LeaveRequestController {
@@ -142,6 +143,16 @@ func (c leaveRequestController) CalendarLeaves(ctx *fiber.Ctx) error {
 		return err
 	}
 	result, err := c.LeaveRequestService.CalendarLeaves(month, year)
+	if err != nil {
+		return err
+	}
+	return middleware.NewSuccessResponse(ctx, result)
+}
+
+func (c leaveRequestController) LeaveRequestReport(ctx *fiber.Ctx) error {
+	start := ctx.Query("start")
+	end := ctx.Query("end")
+	result, err := c.LeaveRequestService.LeaveRequestReport(start, end)
 	if err != nil {
 		return err
 	}

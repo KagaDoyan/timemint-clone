@@ -21,6 +21,7 @@ func NewEmployeeRouter(router fiber.Router, db *gorm.DB) {
 	{
 		// Login route (public, no authentication required)
 		employee_route.Post("/login", employeeController.Login)
+		employee_route.Post("/set-password", employeeController.SetPassword)
 
 		// WhoAmI route (requires access token)
 		employee_route.Get("/whoami",

@@ -22,5 +22,6 @@ func NewShiftAssignRouter(router fiber.Router, db *gorm.DB) {
 		shiftAssignRoute.Post("/batch", middleware.WithRoles(middleware.RoleAdmin, middleware.RoleManager), shiftAssignController.CreateBatch)
 		shiftAssignRoute.Delete("/:id", middleware.WithRoles(middleware.RoleAdmin, middleware.RoleManager), shiftAssignController.Delete)
 		shiftAssignRoute.Get("/calendar/:month/:year", shiftAssignController.CalendarShift)
+		shiftAssignRoute.Get("/report", shiftAssignController.ShiftAssignmentReport)
 	}
 }

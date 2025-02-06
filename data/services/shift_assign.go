@@ -14,18 +14,19 @@ type shiftAssignService struct {
 
 type ShiftAssignService interface {
 	Create(shiftAssign models.ShiftAssignment) (*models.ShiftAssignment, error)
-	CreateBatch(shiftAssigns []models.ShiftAssignment) (int, int, int, []string)
+	CreateBatch(created_by uint, shiftAssigns []models.ShiftAssignment) (int, int, int, []string)
 	FindAll(page, limit int) ([]models.ShiftAssignment, int64, error)
 	FindById(id uint) (*models.ShiftAssignment, error)
 	Delete(id uint) error
 	CalendarShift(month, year int) ([]models.ShiftAssignment, error)
+	ShiftAssignmentReport(start, end string) ([]models.ShiftAssignment, error)
 }
 
 func NewShiftAssignService(repository repositories.ShiftAssignRepository) ShiftAssignService {
 	return &shiftAssignService{repository}
 }
 
-func (s shiftAssignService) CreateBatch(shiftAssigns []models.ShiftAssignment) (int, int, int, []string) {
+func (s shiftAssignService) CreateBatch(craetedBy uint, shiftAssigns []models.ShiftAssignment) (int, int, int, []string) {
 	failures := []string{}
 	totalrecords := len(shiftAssigns)
 	inserted := 0
@@ -61,6 +62,7 @@ func (s shiftAssignService) Create(shiftAssign models.ShiftAssignment) (*models.
 	shiftAssignEntity, err := s.repository.Create(entities.ShiftAssignment{
 		EmployeeID: shiftAssign.EmployeeID,
 		ShiftID:    shiftAssign.ShiftID,
+		CreatedBy:  shiftAssign.CreatedBy,
 		Date:       date,
 	})
 	if err != nil {
@@ -183,6 +185,49 @@ func (s shiftAssignService) CalendarShift(month int, year int) ([]models.ShiftAs
 				Color:       shiftAssign.Shift.Color,
 			},
 			Date: shiftAssign.Date.Format("02-01-2006"),
+		})
+	}
+	return result, nil
+}
+
+func (s shiftAssignService) ShiftAssignmentReport(start, end string) ([]models.ShiftAssignment, error) {
+	shiftAssigns, err := s.repository.ShiftAssignmentReport(start, end)
+	if err != nil {
+		return nil, err
+	}
+	var result []models.ShiftAssignment
+	for _, shiftAssign := range shiftAssigns {
+		result = append(result, models.ShiftAssignment{
+			ID:         shiftAssign.ID,
+			EmployeeID: shiftAssign.EmployeeID,
+			Employee: models.Employee{
+				ID:       shiftAssign.Employee.ID,
+				Name:     shiftAssign.Employee.Name,
+				Email:    shiftAssign.Employee.Email,
+				Phone:    shiftAssign.Employee.Phone,
+				Address:  shiftAssign.Employee.Address,
+				Position: shiftAssign.Employee.Position,
+				RoleID:   shiftAssign.Employee.RoleID,
+			},
+			ShiftID: shiftAssign.ShiftID,
+			Shift: models.Shift{
+				ID:          shiftAssign.Shift.ID,
+				Name:        shiftAssign.Shift.Name,
+				Description: shiftAssign.Shift.Description,
+				StartTime:   shiftAssign.Shift.StartTime,
+				EndTime:     shiftAssign.Shift.EndTime,
+				Color:       shiftAssign.Shift.Color,
+			},
+			Date: shiftAssign.Date.Format("02-01-2006"),
+			CreatedByUser: models.Employee{
+				ID:       shiftAssign.CreatedByUser.ID,
+				Name:     shiftAssign.CreatedByUser.Name,
+				Email:    shiftAssign.CreatedByUser.Email,
+				Phone:    shiftAssign.CreatedByUser.Phone,
+				Address:  shiftAssign.CreatedByUser.Address,
+				Position: shiftAssign.CreatedByUser.Position,
+				RoleID:   shiftAssign.CreatedByUser.RoleID,
+			},
 		})
 	}
 	return result, nil

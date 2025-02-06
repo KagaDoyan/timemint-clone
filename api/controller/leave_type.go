@@ -32,7 +32,7 @@ func (c leaveTypeController) FindAll(ctx *fiber.Ctx) error {
 
 	result, total, err := c.service.FindAll(page, limit)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	totalPages := (total + int64(limit) - 1) / int64(limit)
@@ -49,12 +49,12 @@ func (c leaveTypeController) FindAll(ctx *fiber.Ctx) error {
 func (c leaveTypeController) FindByID(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	result, err := c.service.FindById(uint(id))
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, result)
 }
@@ -62,12 +62,12 @@ func (c leaveTypeController) FindByID(ctx *fiber.Ctx) error {
 func (c leaveTypeController) Create(ctx *fiber.Ctx) error {
 	var leaveType models.LeaveType
 	if err := ctx.BodyParser(&leaveType); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	result, err := c.service.Create(leaveType)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, result)
 }
@@ -75,17 +75,17 @@ func (c leaveTypeController) Create(ctx *fiber.Ctx) error {
 func (c leaveTypeController) Update(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	var leaveType models.LeaveType
 	if err := ctx.BodyParser(&leaveType); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	result, err := c.service.Update(uint(id), leaveType)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, result)
 }
@@ -93,10 +93,10 @@ func (c leaveTypeController) Update(ctx *fiber.Ctx) error {
 func (c leaveTypeController) Delete(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	if err := c.service.Delete(uint(id)); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, nil)
 }

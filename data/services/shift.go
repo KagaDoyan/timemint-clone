@@ -13,6 +13,7 @@ type ShiftService interface {
 	Update(id uint, shift models.Shift) (*models.Shift, error)
 	Delete(id uint) error
 	Option() ([]models.Shift, error)
+	ShiftReport() ([]models.Shift, error)
 }
 
 type shiftService struct {
@@ -21,6 +22,25 @@ type shiftService struct {
 
 func NewShiftService(repository repositories.ShiftRepository) ShiftService {
 	return &shiftService{repository}
+}
+
+func (s shiftService) ShiftReport() ([]models.Shift, error) {
+	shifts, err := s.repository.ShiftReport()
+	if err != nil {
+		return nil, err
+	}
+	var result []models.Shift
+	for _, shift := range shifts {
+		result = append(result, models.Shift{
+			ID:          shift.ID,
+			Name:        shift.Name,
+			Description: shift.Description,
+			StartTime:   shift.StartTime,
+			EndTime:     shift.EndTime,
+			Color:       shift.Color,
+		})
+	}
+	return result, nil
 }
 
 func (s shiftService) Option() ([]models.Shift, error) {

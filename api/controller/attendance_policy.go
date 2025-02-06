@@ -26,7 +26,7 @@ func NewAttendancePolicyController(attendancePolicyService services.AttendancePo
 func (c attendancePolicyController) Find(ctx *fiber.Ctx) error {
 	attendancePolicy, err := c.attendancePolicyService.Find()
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, attendancePolicy)
 }
@@ -34,14 +34,14 @@ func (c attendancePolicyController) Find(ctx *fiber.Ctx) error {
 func (c attendancePolicyController) Update(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	attendancePolicy := new(models.AttendancePolicy)
 	if err := ctx.BodyParser(attendancePolicy); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	if err := c.attendancePolicyService.Update(uint(id), attendancePolicy); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, attendancePolicy)
 }

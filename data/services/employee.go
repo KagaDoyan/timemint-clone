@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"go-fiber/core/logs"
 	"go-fiber/core/utilities"
 	"go-fiber/data/repositories"
@@ -21,6 +22,7 @@ type EmployeeService interface {
 	Login(email, password string) (*models.Employee, error)
 	Option() ([]models.Employee, error)
 	EmployeeReport() ([]models.Employee, error)
+	SetPassword(email, password string) (*models.Employee, error)
 }
 
 type employeeService struct {
@@ -218,16 +220,19 @@ func (s employeeService) Login(email, password string) (*models.Employee, error)
 	// Find employee by email
 	employee, err := s.employeerepo.FindByEmail(email)
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, fmt.Errorf("invalid credentials")
+	}
+	if len(employee.Password) == 0 {
+		return nil, fmt.Errorf("set password")
 	}
 	// Verify password
 	encodingPassword, err := utilities.GetAESEncrypted(password)
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, fmt.Errorf("invalid credentials")
 	}
 
 	if employee.Password != encodingPassword {
-		return nil, errors.New("invalid credentials")
+		return nil, fmt.Errorf("invalid credentials")
 	}
 	// Convert entity to model
 	return &models.Employee{
@@ -273,6 +278,45 @@ func (s employeeService) EmployeeReport() ([]models.Employee, error) {
 		})
 	}
 	return result, nil
+}
+
+func (s employeeService) SetPassword(email, password string) (*models.Employee, error) {
+	encodepassword, err := utilities.GetAESEncrypted(password)
+	if err != nil {
+		return nil, err
+	}
+	entityEmployee := entities.Employee{
+		Password: encodepassword,
+	}
+	emp, err := s.employeerepo.FindByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	if len(emp.Password) > 0 {
+		return nil, errors.New("password already set")
+	}
+	employee, err := s.employeerepo.SetPassword(emp.ID, entityEmployee)
+	if err != nil {
+		logs.Error(err)
+		return nil, err
+	}
+	return &models.Employee{
+		ID:         employee.ID,
+		EmployeeNo: employee.EmployeeNo,
+		Name:       employee.Name,
+		Email:      employee.Email,
+		Phone:      employee.Phone,
+		Address:    employee.Address,
+		Position:   employee.Position,
+		RoleID:     employee.RoleID,
+		Role: models.Role{
+			ID:   employee.Role.ID,
+			Name: employee.Role.Name,
+		},
+		Department: employee.Department,
+		CreatedAt:  employee.CreatedAt,
+		UpdatedAt:  employee.UpdatedAt,
+	}, nil
 }
 
 func NewEmployeeServices(employeerepo repositories.EmployeeRepository) EmployeeService {

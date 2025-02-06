@@ -8,9 +8,11 @@ import (
 
 type ShiftAssignment struct {
 	gorm.Model
-	EmployeeID uint
-	Employee   Employee
-	ShiftID    uint
-	Shift      Shift
-	Date       time.Time
+	EmployeeID    uint
+	Employee      Employee
+	ShiftID       uint
+	Shift         Shift
+	Date          time.Time
+	CreatedBy     uint
+	CreatedByUser Employee `gorm:"foreignKey:CreatedBy"`
 }

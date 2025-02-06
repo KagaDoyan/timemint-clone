@@ -32,7 +32,7 @@ func (c dayOfWorkController) FindAll(ctx *fiber.Ctx) error {
 
 	result, total, err := c.service.FindAll(page, limit)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	totalPages := (total + int64(limit) - 1) / int64(limit)
@@ -49,12 +49,12 @@ func (c dayOfWorkController) FindAll(ctx *fiber.Ctx) error {
 func (c dayOfWorkController) FindByID(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	result, err := c.service.FindByID(uint(id))
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, result)
 }
@@ -62,11 +62,11 @@ func (c dayOfWorkController) FindByID(ctx *fiber.Ctx) error {
 func (c dayOfWorkController) Create(ctx *fiber.Ctx) error {
 	var dayOfWork models.DayOfWork
 	if err := ctx.BodyParser(&dayOfWork); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	data, err := c.service.Create(dayOfWork)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, data)
 }
@@ -74,19 +74,19 @@ func (c dayOfWorkController) Create(ctx *fiber.Ctx) error {
 func (c dayOfWorkController) Update(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	var dayOfWork models.DayOfWork
 	if err := ctx.BodyParser(&dayOfWork); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	// Ensure the ID from the path matches the body
 	dayOfWork.ID = uint(id)
 	data, err := c.service.Update(uint(id), dayOfWork)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, data)
 }
@@ -94,10 +94,10 @@ func (c dayOfWorkController) Update(ctx *fiber.Ctx) error {
 func (c dayOfWorkController) Delete(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	if err := c.service.Delete(uint(id)); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, nil)
 }

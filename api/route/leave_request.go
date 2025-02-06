@@ -23,4 +23,5 @@ func NewLeaveRequestRoute(app fiber.Router, db *gorm.DB) {
 	leaveRequest.Put("/:id", middleware.WithRoles(middleware.RoleAdmin, middleware.RoleManager), leaveRequestController.Update)
 	leaveRequest.Delete("/:id", leaveRequestController.Delete)
 	leaveRequest.Get("/calendar/:month/:year", leaveRequestController.CalendarLeaves)
+	leaveRequest.Get("/report", leaveRequestController.LeaveRequestReport)
 }

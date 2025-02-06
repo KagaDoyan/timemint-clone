@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"fmt"
 	"go-fiber/domain/entities"
 	"strconv"
 
@@ -19,6 +20,7 @@ type LeaveRequestRepository interface {
 	FindAll(page, limit int, status string, employeeID uint, from, to string) ([]entities.LeaveRequest, int64, int64, int64, int64, error)
 	FindById(id uint) (*entities.LeaveRequest, error)
 	CalendarLeaves(month, year int) ([]entities.LeaveRequest, error)
+	LeaveRequestReport(start, end string) ([]entities.LeaveRequest, error)
 }
 
 func NewLeaveRequestRepository(db *gorm.DB) LeaveRequestRepository {
@@ -130,6 +132,23 @@ func (r leaveRequestRepository) FindById(id uint) (*entities.LeaveRequest, error
 func (r leaveRequestRepository) CalendarLeaves(month, year int) ([]entities.LeaveRequest, error) {
 	var leaveRequests []entities.LeaveRequest
 	err := r.db.Preload(clause.Associations).Where("MONTH(STR_TO_DATE(start_date, '%d-%m-%Y')) = ? AND YEAR(STR_TO_DATE(start_date, '%d-%m-%Y')) = ?", month, year).
+		Find(&leaveRequests).Error
+	if err != nil {
+		return nil, err
+	}
+	return leaveRequests, nil
+}
+
+func (r leaveRequestRepository) LeaveRequestReport(start, end string) ([]entities.LeaveRequest, error) {
+	var daterangewhere string
+	if start != "" && end != "" {
+		daterangewhere = fmt.Sprintf(
+			"STR_TO_DATE(start_date, '%%d-%%m-%%Y') BETWEEN STR_TO_DATE('%s', '%%d-%%m-%%Y') AND STR_TO_DATE('%s', '%%d-%%m-%%Y')",
+			start, end,
+		)
+	}
+	var leaveRequests []entities.LeaveRequest
+	err := r.db.Preload(clause.Associations).Where(daterangewhere).
 		Find(&leaveRequests).Error
 	if err != nil {
 		return nil, err

@@ -19,6 +19,7 @@ type LeaveRequestService interface {
 	FindAll(page, limit int, status string, employeeID uint, from, to string) ([]models.LeaveRequest, int64, int64, int64, int64, error)
 	FindById(id uint) (*models.LeaveRequest, error)
 	CalendarLeaves(month, year int) ([]models.LeaveRequest, error)
+	LeaveRequestReport(start, end string) ([]models.LeaveRequest, error)
 }
 
 func NewLeaveRequestService(repo repositories.LeaveRequestRepository) LeaveRequestService {
@@ -132,6 +133,7 @@ func (s leaveRequestService) Update(id uint, leaveRequest models.LeaveRequest) (
 		Status:      leaveRequest.Status,
 		Remark:      leaveRequest.Remark,
 		FullDay:     leaveRequest.FullDay,
+		ReviewerID:  &leaveRequest.ReviewerID,
 	}
 
 	result, err := s.repo.Update(id, leaveRequestEntity)
@@ -292,6 +294,49 @@ func (s leaveRequestService) CalendarLeaves(month, year int) ([]models.LeaveRequ
 			Reason:      data.Reason,
 			Status:      data.Status,
 			FullDay:     data.FullDay,
+		})
+	}
+	return results, nil
+}
+
+func (s leaveRequestService) LeaveRequestReport(start, end string) ([]models.LeaveRequest, error) {
+	datas, err := s.repo.LeaveRequestReport(start, end)
+	if err != nil {
+		return nil, err
+	}
+	var results []models.LeaveRequest
+	for _, data := range datas {
+		var reviewer models.Employee
+		if data.Reviewer != nil {
+			reviewer = models.Employee{
+				ID:   *data.ReviewerID,
+				Name: data.Reviewer.Name,
+			}
+		}
+		results = append(results, models.LeaveRequest{
+			ID:         data.ID,
+			EmployeeID: data.EmployeeID,
+			Employee: models.Employee{
+				ID:      data.EmployeeID,
+				Name:    data.Employee.Name,
+				Email:   data.Employee.Email,
+				Phone:   data.Employee.Phone,
+				Address: data.Employee.Address,
+			},
+			LeaveType: models.LeaveType{
+				ID:          data.LeaveTypeID,
+				LeaveType:   data.LeaveType.LeaveType,
+				Description: data.LeaveType.Description,
+				Payable:     data.LeaveType.Payable,
+				AnnuallyMax: data.LeaveType.AnnuallyMax,
+			},
+			LeaveTypeID: data.LeaveTypeID,
+			StartDate:   data.StartDate,
+			EndDate:     data.EndDate,
+			Reason:      data.Reason,
+			Status:      data.Status,
+			FullDay:     data.FullDay,
+			Reviewer:    reviewer,
 		})
 	}
 	return results, nil

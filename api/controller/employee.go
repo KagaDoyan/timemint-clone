@@ -26,12 +26,13 @@ type EmployeeController interface {
 	WhoAmI(ctx *fiber.Ctx) error
 	Option(ctx *fiber.Ctx) error
 	EmployeeReport(ctx *fiber.Ctx) error
+	SetPassword(ctx *fiber.Ctx) error
 }
 
 func (c employeeController) Option(ctx *fiber.Ctx) error {
 	datas, err := c.employeeService.Option()
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, datas)
 }
@@ -43,7 +44,7 @@ func (c employeeController) FindAll(ctx *fiber.Ctx) error {
 	// Call service method with pagination
 	result, total, err := c.employeeService.FindAll(page, limit)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	// Calculate total pages
@@ -62,12 +63,12 @@ func (c employeeController) FindAll(ctx *fiber.Ctx) error {
 func (c employeeController) FindByID(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	result, err := c.employeeService.FindByID(uint(id))
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, result)
 }
@@ -75,11 +76,11 @@ func (c employeeController) FindByID(ctx *fiber.Ctx) error {
 func (c employeeController) Create(ctx *fiber.Ctx) error {
 	var employee models.Employee
 	if err := ctx.BodyParser(&employee); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	data, err := c.employeeService.Create(&employee)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, data)
 }
@@ -87,19 +88,19 @@ func (c employeeController) Create(ctx *fiber.Ctx) error {
 func (c employeeController) Update(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	var employee models.Employee
 	if err := ctx.BodyParser(&employee); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	// Ensure the ID from the path matches the body
 	employee.ID = uint(id)
 	data, err := c.employeeService.Update(&employee)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, data)
 }
@@ -107,11 +108,11 @@ func (c employeeController) Update(ctx *fiber.Ctx) error {
 func (c employeeController) Delete(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	if err := c.employeeService.Delete(uint(id)); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, nil)
 }
@@ -119,12 +120,12 @@ func (c employeeController) Delete(ctx *fiber.Ctx) error {
 func (c employeeController) FindByEmail(ctx *fiber.Ctx) error {
 	email := ctx.Query("email")
 	if email == "" {
-		return middleware.NewErrorMessageResponse(ctx, fiber.NewError(fiber.StatusBadRequest, "Email is required"))
+		return middleware.NewErrorResponses(ctx, fiber.NewError(fiber.StatusBadRequest, "Email is required"))
 	}
 
 	result, err := c.employeeService.FindByEmail(email)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, result)
 }
@@ -137,19 +138,19 @@ func (c employeeController) Login(ctx *fiber.Ctx) error {
 	}
 
 	if err := ctx.BodyParser(&loginRequest); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	// Attempt login
 	employee, err := c.employeeService.Login(loginRequest.Email, loginRequest.Password)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	// Generate JWT token
 	tokenPair, err := middleware.GenerateJWTToken(fmt.Sprintf("%d", employee.ID))
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	// Return login response
@@ -166,12 +167,12 @@ func (c employeeController) WhoAmI(ctx *fiber.Ctx) error {
 	// Extract user ID from the access token
 	employeeID, err := middleware.GetOwnerAccessToken(ctx)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	// Find employee details
 	employee, err := c.employeeService.FindByID(*employeeID)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	// Return user details
@@ -182,10 +183,40 @@ func (c employeeController) EmployeeReport(ctx *fiber.Ctx) error {
 	// Find employee details
 	employee, err := c.employeeService.EmployeeReport()
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	// Return user details
 	return middleware.NewSuccessResponse(ctx, employee)
+}
+
+func (c employeeController) SetPassword(ctx *fiber.Ctx) error {
+	type PasswordRequest struct {
+		Password string `json:"password" validate:"required"`
+		Email    string `json:"email" validate:"required,email"`
+	}
+	body := new(PasswordRequest)
+	if err := ctx.BodyParser(body); err != nil {
+		return middleware.NewErrorResponses(ctx, err)
+	}
+	employee, err := c.employeeService.SetPassword(body.Email, body.Password)
+	if err != nil {
+		return middleware.NewErrorResponses(ctx, err)
+	}
+
+	// Generate JWT token
+	tokenPair, err := middleware.GenerateJWTToken(fmt.Sprintf("%d", employee.ID))
+	if err != nil {
+		return middleware.NewErrorResponses(ctx, err)
+	}
+
+	// Return login response
+	return middleware.NewSuccessResponse(ctx, fiber.Map{
+		"user": employee,
+		"tokens": fiber.Map{
+			"access_token":  strings.Replace(string(tokenPair.AccessToken), "\"", "", -1),
+			"refresh_token": strings.Replace(string(tokenPair.RefreshToken), "\"", "", -1),
+		},
+	})
 }
 
 func NewEmployeeController(employeeService services.EmployeeService) EmployeeController {

@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"fmt"
 	"go-fiber/domain/entities"
 
 	"gorm.io/gorm"
@@ -18,6 +19,7 @@ type ShiftAssignRepository interface {
 	FindAll(page, limit int) ([]entities.ShiftAssignment, int64, error)
 	FindById(id uint) (*entities.ShiftAssignment, error)
 	CalendarShift(month, year int) ([]entities.ShiftAssignment, error)
+	ShiftAssignmentReport(start, end string) ([]entities.ShiftAssignment, error)
 }
 
 func NewShiftAssignRepository(db *gorm.DB) ShiftAssignRepository {
@@ -83,6 +85,19 @@ func (r shiftAssignRepository) FindById(id uint) (*entities.ShiftAssignment, err
 func (r shiftAssignRepository) CalendarShift(month int, year int) ([]entities.ShiftAssignment, error) {
 	var shiftAssigns []entities.ShiftAssignment
 	err := r.db.Preload(clause.Associations).Preload("Employee.Role").Where("MONTH(date) = ? AND YEAR(date) = ?", month, year).Find(&shiftAssigns).Error
+	if err != nil {
+		return nil, err
+	}
+	return shiftAssigns, nil
+}
+
+func (r shiftAssignRepository) ShiftAssignmentReport(start, end string) ([]entities.ShiftAssignment, error) {
+	var daterangewhere string
+	if start != "" && end != "" {
+		daterangewhere = fmt.Sprintf("date BETWEEN '%s' AND '%s'", start, end)
+	}
+	var shiftAssigns []entities.ShiftAssignment
+	err := r.db.Preload(clause.Associations).Preload("Employee.Role").Where(daterangewhere).Find(&shiftAssigns).Error
 	if err != nil {
 		return nil, err
 	}

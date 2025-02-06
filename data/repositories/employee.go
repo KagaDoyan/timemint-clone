@@ -20,6 +20,7 @@ type EmployeeRepository interface {
 	FindByEmail(email string) (*entities.Employee, error)
 	Option() ([]entities.Employee, error)
 	EmployeeReport() ([]entities.Employee, error)
+	SetPassword(id uint, employee entities.Employee) (*entities.Employee, error)
 }
 
 func (s employeeRepository) Option() ([]entities.Employee, error) {
@@ -48,7 +49,6 @@ func (s employeeRepository) FindAll(page, limit int) ([]entities.Employee, int64
 	if err != nil {
 		return nil, 0, err
 	}
-
 	return employees, total, nil
 }
 
@@ -113,6 +113,19 @@ func (s employeeRepository) EmployeeReport() ([]entities.Employee, error) {
 		return nil, err
 	}
 	return employee, nil
+}
+
+func (s employeeRepository) SetPassword(id uint, employee entities.Employee) (*entities.Employee, error) {
+	err := s.db.Model(&employee).Where("id = ?", id).Update("password", employee.Password).Error
+	if err != nil {
+		return nil, err
+	}
+	var result entities.Employee
+	err = s.db.Preload("Role").First(&result, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
 func NewEmployeeRepository(db *gorm.DB) EmployeeRepository {

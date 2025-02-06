@@ -30,7 +30,7 @@ func (c eventController) IsEvent(ctx *fiber.Ctx) error {
 	date := ctx.Params("date")
 	isEvent, err := c.service.IsEvent(date)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, isEvent)
 }
@@ -41,7 +41,7 @@ func (c eventController) FindAll(ctx *fiber.Ctx) error {
 
 	result, total, err := c.service.FindAll(page, limit)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 
 	totalPages := (total + int64(limit) - 1) / int64(limit)
@@ -57,16 +57,16 @@ func (c eventController) FindAll(ctx *fiber.Ctx) error {
 func (c eventController) Create(ctx *fiber.Ctx) error {
 	var event models.Event
 	if err := ctx.BodyParser(&event); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	userID, err := middleware.GetOwnerAccessToken(ctx)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	event.CreatedBy = *userID
 	inserted, err := c.service.Create(event)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessMessageResponse(ctx, fmt.Sprintf("Event created %d", inserted))
 }
@@ -74,15 +74,15 @@ func (c eventController) Create(ctx *fiber.Ctx) error {
 func (c eventController) Update(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	var event models.Event
 	if err := ctx.BodyParser(&event); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	data, err := c.service.Update(uint(id), event)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, data)
 }
@@ -90,10 +90,10 @@ func (c eventController) Update(ctx *fiber.Ctx) error {
 func (c eventController) Delete(ctx *fiber.Ctx) error {
 	id, err := ctx.ParamsInt("id")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	if err := c.service.Delete(uint(id)); err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, nil)
 }
@@ -101,15 +101,15 @@ func (c eventController) Delete(ctx *fiber.Ctx) error {
 func (c eventController) CalendarEvent(ctx *fiber.Ctx) error {
 	month, err := ctx.ParamsInt("month")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	year, err := ctx.ParamsInt("year")
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	result, err := c.service.CalendarEvent(month, year)
 	if err != nil {
-		return middleware.NewErrorMessageResponse(ctx, err)
+		return middleware.NewErrorResponses(ctx, err)
 	}
 	return middleware.NewSuccessResponse(ctx, result)
 }
