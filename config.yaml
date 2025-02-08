@@ -2,7 +2,7 @@ App:
   port: 3000
 
 database_erp:
-  dbhost: host.docker.internal
+  dbhost: 100.113.201.122
   dbport: 3306
   username: root
   password: Mark3113
