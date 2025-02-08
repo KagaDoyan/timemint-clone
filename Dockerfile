@@ -24,6 +24,6 @@ COPY --from=builder /go/src/app/logs/*.log ./logs
 ENV TZ=Asia/Vientiane
 
 ENTRYPOINT /app
-LABEL Name=kk-lotto-public-api
+LABEL Name=my-app
 EXPOSE 3000
 CMD ["/app"]
