@@ -1,28 +1,31 @@
-#build stage
-FROM golang:1.23-alpine AS builder
+# Build stage
+FROM golang:1.21-alpine AS builder
 RUN apk add --no-cache git
+
 WORKDIR /go/src/app
-COPY *.mod .
-COPY *.go .
-COPY *.yaml .
-COPY *.json .
+COPY *.mod *.go *.yaml *.json ./
+
 RUN go mod download
-COPY . .
-COPY config.yaml .
-RUN go get -d -v ./ .
-RUN go build -o /go/bin/app -v ./ .
+RUN go get -d -v ./...
+RUN go build -o /go/bin/app -v ./...
 
-#final stage
+# Final stage
 FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-RUN apk add --no-cache tzdata nano
-RUN mkdir logs
+RUN apk add --no-cache ca-certificates tzdata nano
+
+# Create necessary directories
+RUN mkdir -p /logs
+
+# Copy application binary and configuration file
 COPY --from=builder /go/bin/app /app
-COPY --from=builder /go/src/app/config.yaml .
+COPY --from=builder /go/src/app/config.yaml /config.yaml
 
-ENV TZ=Asia/Vientiane
+# Set timezone
+ENV TZ=Asia/Bangkok
 
-ENTRYPOINT /app
+# Entrypoint for the container
+ENTRYPOINT ["/app"]
+
+# Metadata and port exposure
 LABEL Name=my_app
 EXPOSE 3000
-CMD ["/app"]
