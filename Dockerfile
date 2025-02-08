@@ -19,11 +19,10 @@ RUN apk add --no-cache tzdata nano
 RUN mkdir logs
 COPY --from=builder /go/bin/app /app
 COPY --from=builder /go/src/app/config.yaml .
-COPY --from=builder /go/src/app/logs/*.log ./logs
 
 ENV TZ=Asia/Vientiane
 
 ENTRYPOINT /app
-LABEL Name=my-app
+LABEL Name=my_app
 EXPOSE 3000
 CMD ["/app"]
