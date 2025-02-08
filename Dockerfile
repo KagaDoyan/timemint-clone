@@ -1,31 +1,39 @@
-# Build stage
-FROM golang:1.23.5-alpine AS builder
-RUN apk add --no-cache git
+###############################
+# DOCKER START STAGE
+###############################
+FROM golang:1.19.3-buster
+WORKDIR /usr/src/goapp/
+USER ${USER}
+ADD ./go.mod /usr/src/goapp/
+ADD . /usr/src/goapp/
 
-WORKDIR /go/src/app
-COPY *.mod *.go *.yaml *.json ./
+###############################
+# DOCKER ENVIRONMENT STAGE
+###############################
+ENV GO111MODULE="on" \
+  CGO_ENABLED="0" \
+  GO_GC="off"
 
-RUN go mod download
-RUN go get -d -v ./...
-RUN go build -o /go/bin/app -v ./...
+###############################
+# DOCKER UPGRADE STAGE
+###############################
+RUN apt-get autoremove \
+  && apt-get autoclean \
+  && apt-get update --fix-missing \
+  && apt-get upgrade -y \
+  && apt-get install curl \
+  build-essential -y
+  
+###############################
+# DOCKER INSTALL & BUILD STAGE
+###############################
+RUN go mod download \
+  && go mod tidy \
+  && go mod verify \
+  && go build -o main .
 
-# Final stage
-FROM alpine:latest
-RUN apk add --no-cache ca-certificates tzdata nano
-
-# Create necessary directories
-RUN mkdir -p /logs
-
-# Copy application binary and configuration file
-COPY --from=builder /go/bin/app /app
-COPY --from=builder /go/src/app/config.yaml /config.yaml
-
-# Set timezone
-ENV TZ=Asia/Bangkok
-
-# Entrypoint for the container
-ENTRYPOINT ["/app"]
-
-# Metadata and port exposure
-LABEL Name=my_app
+###############################
+# DOCKER FINAL STAGE
+###############################
 EXPOSE 3000
+CMD ["./main"]
