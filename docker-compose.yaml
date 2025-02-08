@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  my_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:3000" # Map container's port 3000 to host's port 4000
+    volumes:
+      - ./logs:/logs # Bind logs directory for persistent storage
+      - ./config.yaml:/config.yaml # Ensure config file is accessible
+    environment:
+      TZ: Asia/Bangkok # Set timezone for Bangkok
+    restart: always # Restart the container automatically if it crashes

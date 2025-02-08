@@ -1,12 +1,12 @@
 App:
-  port: 4000
+  port: 3000
 
 database_erp:
-  dbhost: localhost
+  dbhost: host.docker.internal
   dbport: 3306
   username: root
-  password: 
-  dbname: timemint
+  password: Mark3113
+  dbname: attendance
 
 jwt:
   access_token: thisisasupersecretkey123
