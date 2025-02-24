@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"fmt"
 	"go-fiber/domain/entities"
 	"time"
 
@@ -37,7 +38,7 @@ func (r eventRepository) FindAll(page, limit int) ([]entities.Event, int64, erro
 	offset := (page - 1) * limit
 
 	// Apply pagination
-	err = r.db.Limit(limit).Offset(offset).Order("created_at desc").Order("created_at desc").Find(&Events).Error
+	err = r.db.Limit(limit).Offset(offset).Order("created_at desc").Order("created_at desc").Preload("Invites").Find(&Events).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -57,16 +58,51 @@ func (r eventRepository) Create(Event entities.Event) (*entities.Event, error) {
 	return &result, nil
 }
 
-func (r eventRepository) Update(id uint, Event entities.Event) (*entities.Event, error) {
-	err := r.db.Model(&entities.Event{}).Where("id = ?", id).Updates(Event).Error
+func (r eventRepository) Update(id uint, updatedEvent entities.Event) (*entities.Event, error) {
+	// Start a transaction to ensure data consistency
+	tx := r.db.Begin()
+
+	// Update the basic event details
+	err := tx.Model(&entities.Event{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"name":        updatedEvent.Name,
+		"description": updatedEvent.Description,
+		"start":       updatedEvent.Start,
+		"end":         updatedEvent.End,
+		"date":        updatedEvent.Date,
+		"created_by":  updatedEvent.CreatedBy,
+	}).Error
 	if err != nil {
+		tx.Rollback() // Rollback in case of error
 		return nil, err
 	}
+
+	// Update the invites if provided
+	if len(updatedEvent.Invites) > 0 {
+		// Clear existing invites
+		err = tx.Table("event_invites").Where("event_id = ?", id).Delete(nil).Error
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		// Add new invites
+		for _, invite := range updatedEvent.Invites {
+			err = tx.Table("event_invites").Create(&map[string]interface{}{"event_id": id, "employee_id": invite.ID}).Error
+			if err != nil {
+				tx.Rollback()
+				return nil, fmt.Errorf("error creating invite: %v", err)
+			}
+		}
+	}
+
+	// Fetch and return the updated event
 	var result entities.Event
-	err = r.db.First(&result, id).Error
+	err = tx.Preload("Invites").First(&result, id).Error
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
+
+	tx.Commit() // Commit the transaction
 	return &result, nil
 }
 
@@ -93,7 +129,7 @@ func (r eventRepository) IsEvent(date time.Time) (bool, error) {
 
 func (r eventRepository) CalendarEvent(month, year int) ([]entities.Event, error) {
 	var events []entities.Event
-	err := r.db.Where("MONTH(date) = ? AND YEAR(date) = ?", month, year).Find(&events).Error
+	err := r.db.Preload("Invites").Where("MONTH(date) = ? AND YEAR(date) = ?", month, year).Find(&events).Error
 	if err != nil {
 		return nil, err
 	}

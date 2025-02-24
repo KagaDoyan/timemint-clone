@@ -107,7 +107,11 @@ func (c eventController) CalendarEvent(ctx *fiber.Ctx) error {
 	if err != nil {
 		return middleware.NewErrorResponses(ctx, err)
 	}
-	result, err := c.service.CalendarEvent(month, year)
+	userID, err := middleware.GetOwnerAccessToken(ctx)
+	if err != nil {
+		return middleware.NewErrorResponses(ctx, err)
+	}
+	result, err := c.service.CalendarEvent(int(*userID), month, year)
 	if err != nil {
 		return middleware.NewErrorResponses(ctx, err)
 	}

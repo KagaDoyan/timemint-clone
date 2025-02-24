@@ -8,11 +8,12 @@ import (
 
 type Event struct {
 	gorm.Model
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	EventType   string    `json:"type"`
-	Start       string    `json:"start"`
-	End         string    `json:"end"`
-	Date        time.Time `json:"date"`
-	CreatedBy   uint      `json:"created_by"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	EventType   string     `json:"type"`
+	Start       string     `json:"start"`
+	End         string     `json:"end"`
+	Date        time.Time  `json:"date"`
+	CreatedBy   uint       `json:"created_by"`
+	Invites     []Employee `gorm:"many2many:event_invites;" json:"invites"`
 }

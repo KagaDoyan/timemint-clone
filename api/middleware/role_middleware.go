@@ -78,7 +78,7 @@ func extractUserRole(ctx *fiber.Ctx) (string, error) {
 	}
 
 	// Log the extracted role for debugging
-	logs.Info(fmt.Sprintf("Extracted role: %s", claims.Role))
+	// logs.Info(fmt.Sprintf("Extracted role: %s", claims.Role))
 
 	return claims.Role, nil
 }
