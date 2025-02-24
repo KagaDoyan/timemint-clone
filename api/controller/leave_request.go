@@ -55,7 +55,6 @@ func (c leaveRequestController) AdminLeaveCraete(ctx *fiber.Ctx) error {
 		return err
 	}
 	employeeID := *userID
-	leaverequest.EmployeeID = employeeID
 	result, err := c.LeaveRequestService.CraeteLeaveRequests(employeeID, leaverequest)
 	if err != nil {
 		return err
