@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+	"go-fiber/bootstrap"
 	"go-fiber/data/repositories"
 	"go-fiber/domain/entities"
 	"go-fiber/domain/models"
@@ -10,6 +12,8 @@ import (
 type leaveRequestService struct {
 	repo repositories.LeaveRequestRepository
 }
+
+var leave_notification = bootstrap.GetEnv("leave_notification", "")
 
 type LeaveRequestService interface {
 	EmpLeaveRequests(employeeID uint, leave models.LeaveRequest) (*models.LeaveRequest, error)
@@ -92,6 +96,90 @@ func (s leaveRequestService) EmpLeaveRequests(employeeID uint, leave models.Leav
 		return nil, err
 	}
 
+	approvers, _ := s.repo.ApproverEmails()
+	if len(approvers) > 0 {
+		//send email
+		email_body := fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>Leave Request Notification</title>
+			<style>
+				body {
+					font-family: Arial, sans-serif;
+					line-height: 1.6;
+					margin: 0;
+					padding: 0;
+					background-color: #f9f9f9;
+				}
+				.email-container {
+					max-width: 600px;
+					margin: 20px auto;
+					padding: 20px;
+					background-color: #ffffff;
+					border: 1px solid #dddddd;
+					border-radius: 8px;
+				}
+				.header {
+					background-color: #4CAF50;
+					color: #ffffff;
+					padding: 10px;
+					text-align: center;
+					border-radius: 8px 8px 0 0;
+				}
+				.content {
+					padding: 20px;
+				}
+				.footer {
+					font-size: 0.9em;
+					color: #888888;
+					text-align: center;
+					margin-top: 20px;
+				}
+				.button {
+					display: inline-block;
+					padding: 10px 20px;
+					margin-top: 20px;
+					background-color: #4CAF50;
+					color: #ffffff;
+					text-decoration: none;
+					border-radius: 5px;
+				}
+				.button:hover {
+					background-color: #45a049;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="email-container">
+				<div class="header">
+					<h1>Leave Request Notification</h1>
+				</div>
+				<div class="content">
+					<p>You have received a new leave request from <strong>%s</strong>.</p>
+					<p><strong>Details:</strong></p>
+					<ul>
+						<li><strong>Type of Leave:</strong> %s</li>
+						<li><strong>Start Date:</strong> %s</li>
+						<li><strong>End Date:</strong> %s</li>
+						<li><strong>Reason:</strong> %s</li>
+					</ul>
+					<p>Please review the request and take necessary action.</p>
+					<p>Thank you!</p>
+				</div>
+				<div class="footer">
+					<p>This is an automated message. Please do not reply directly to this email.</p>
+				</div>
+			</div>
+		</body>
+		</html>
+		`, result.Employee.Name, result.LeaveType.LeaveType, result.StartDate, result.EndDate, result.Reason)
+		for _, approver := range approvers {
+			go SendEmail(email_body, approver.Email)
+		}
+	}
 	var reviewer models.Employee
 	if result.ReviewerID != nil {
 		reviewer = models.Employee{
@@ -317,11 +405,12 @@ func (s leaveRequestService) LeaveRequestReport(start, end string) ([]models.Lea
 			ID:         data.ID,
 			EmployeeID: data.EmployeeID,
 			Employee: models.Employee{
-				ID:      data.EmployeeID,
-				Name:    data.Employee.Name,
-				Email:   data.Employee.Email,
-				Phone:   data.Employee.Phone,
-				Address: data.Employee.Address,
+				EmployeeNo: data.Employee.EmployeeNo,
+				ID:         data.EmployeeID,
+				Name:       data.Employee.Name,
+				Email:      data.Employee.Email,
+				Phone:      data.Employee.Phone,
+				Address:    data.Employee.Address,
 			},
 			LeaveType: models.LeaveType{
 				ID:          data.LeaveTypeID,

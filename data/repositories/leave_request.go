@@ -20,11 +20,21 @@ type LeaveRequestRepository interface {
 	FindById(id uint) (*entities.LeaveRequest, error)
 	CalendarLeaves(month, year int) ([]entities.LeaveRequest, error)
 	LeaveRequestReport(start, end string) ([]entities.LeaveRequest, error)
+	ApproverEmails() ([]entities.LeaveApproverEmail, error)
 }
 
 func NewLeaveRequestRepository(db *gorm.DB) LeaveRequestRepository {
-	db.AutoMigrate(&entities.LeaveRequest{})
+	db.AutoMigrate(&entities.LeaveRequest{}, &entities.LeaveApproverEmail{})
 	return &leaveRequestRepository{db: db}
+}
+
+func (r leaveRequestRepository) ApproverEmails() ([]entities.LeaveApproverEmail, error) {
+	var leaveApproverEmails []entities.LeaveApproverEmail
+	err := r.db.Find(&leaveApproverEmails).Error
+	if err != nil {
+		return nil, err
+	}
+	return leaveApproverEmails, nil
 }
 
 func (r leaveRequestRepository) Create(leaveRequest entities.LeaveRequest) (*entities.LeaveRequest, error) {

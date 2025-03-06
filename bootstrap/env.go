@@ -27,6 +27,13 @@ type Env struct {
 		AccessToken  string `mapstructure:"access_token"`
 		RefreshToken string `mapstructure:"refresh_token"`
 	} `mapstructure:"jwt"`
+
+	SMTP struct {
+		Host     string `mapstructure:"host"`
+		Port     string `mapstructure:"port"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
+	} `mapstructure:"smtp"`
 }
 
 func NewEnv() *Env {
