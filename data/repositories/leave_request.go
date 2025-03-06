@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"fmt"
 	"go-fiber/domain/entities"
 	"strconv"
 
@@ -141,15 +140,16 @@ func (r leaveRequestRepository) CalendarLeaves(month, year int) ([]entities.Leav
 
 func (r leaveRequestRepository) LeaveRequestReport(start, end string) ([]entities.LeaveRequest, error) {
 	var daterangewhere string
-	if start != "" && end != "" {
-		daterangewhere = fmt.Sprintf(
-			"STR_TO_DATE(start_date, '%%d-%%m-%%Y') BETWEEN STR_TO_DATE('%s', '%%d-%%m-%%Y') AND STR_TO_DATE('%s', '%%d-%%m-%%Y')",
-			start, end,
-		)
+	query := r.db.Preload(clause.Associations)
+	if start != "" {
+		if end == "" {
+			end = start
+		}
+		daterangewhere = `STR_TO_DATE(start_date, '%d-%m-%Y') BETWEEN ? AND ?`
+		query = query.Where(daterangewhere, start, end)
 	}
 	var leaveRequests []entities.LeaveRequest
-	err := r.db.Preload(clause.Associations).Where(daterangewhere).
-		Find(&leaveRequests).Error
+	err := query.Find(&leaveRequests).Error
 	if err != nil {
 		return nil, err
 	}

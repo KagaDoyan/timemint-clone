@@ -78,6 +78,9 @@ func (s eventService) Create(Event models.Event) (int, error) {
 		logs.Error(err)
 		return 0, err
 	}
+	if startDate.After(endDate) {
+		endDate = startDate
+	}
 	var invites []entities.Employee
 	for _, invite := range Event.Invites {
 		invites = append(invites, entities.Employee{Model: gorm.Model{ID: invite.ID}}) // Assuming ID is provided for invites
@@ -85,6 +88,7 @@ func (s eventService) Create(Event models.Event) (int, error) {
 	// loop the date from start to end
 	totalInserted := 0
 	for date := startDate; date.Before(endDate.AddDate(0, 0, 1)); date = date.AddDate(0, 0, 1) {
+		logs.Info(date.String())
 		_, err := s.repository.Create(entities.Event{
 			Name:        Event.Name,
 			Description: Event.Description,

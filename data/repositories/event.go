@@ -107,7 +107,8 @@ func (r eventRepository) Update(id uint, updatedEvent entities.Event) (*entities
 }
 
 func (r eventRepository) Delete(id uint) error {
-	err := r.db.Unscoped().Delete(&entities.Event{}, id).Error
+	err := r.db.Table("event_invites").Where("event_id = ?", id).Delete(map[string]interface{}{"event_id": id}).Error
+	err = r.db.Unscoped().Delete(&entities.Event{}, id).Error
 	if err != nil {
 		return err
 	}

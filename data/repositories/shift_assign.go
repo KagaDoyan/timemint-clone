@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"fmt"
 	"go-fiber/domain/entities"
 
 	"gorm.io/gorm"
@@ -93,11 +92,16 @@ func (r shiftAssignRepository) CalendarShift(month int, year int) ([]entities.Sh
 
 func (r shiftAssignRepository) ShiftAssignmentReport(start, end string) ([]entities.ShiftAssignment, error) {
 	var daterangewhere string
-	if start != "" && end != "" {
-		daterangewhere = fmt.Sprintf("date BETWEEN '%s' AND '%s'", start, end)
+	query := r.db.Preload(clause.Associations).Preload("Employee.Role")
+	if start != "" {
+		if end == "" {
+			end = start
+		}
+		daterangewhere = `date(date) BETWEEN ? AND ?`
+		query = query.Where(daterangewhere, start, end)
 	}
 	var shiftAssigns []entities.ShiftAssignment
-	err := r.db.Preload(clause.Associations).Preload("Employee.Role").Where(daterangewhere).Find(&shiftAssigns).Error
+	err := query.Find(&shiftAssigns).Error
 	if err != nil {
 		return nil, err
 	}

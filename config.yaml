@@ -1,11 +1,11 @@
 App:
-  port: 3000
+  port: 4000
 
 database_erp:
-  dbhost: 100.113.201.122
+  dbhost: localhost
   dbport: 3306
   username: root
-  password: Mark3113
+  password: hakase051199
   dbname: attendance
 
 jwt:
