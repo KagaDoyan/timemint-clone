@@ -167,6 +167,7 @@ func (s leaveRequestService) EmpLeaveRequests(employeeID uint, leave models.Leav
 						<li><strong>Reason:</strong> %s</li>
 					</ul>
 					<p>Please review the request and take necessary action.</p>
+					<a href="https://attendance.homekvs.pw/leave-approval" class="button">Go to Approval Page</a>
 					<p>Thank you!</p>
 				</div>
 				<div class="footer">
